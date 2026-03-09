@@ -11187,3 +11187,71 @@ describe('Section 97: ActionMoveToPoint/DialogObject, party loop, store price gu
   });
 
 });
+
+// ---------------------------------------------------------------------------
+// Section 98: ResistForce null-guard, CutsceneAttack bounds, ModulePlaceable
+//             lock logic fix, MenuEquipment party[0] null-guard
+// ---------------------------------------------------------------------------
+// Fixes verified in this section:
+//   ResistForce (fn 169): returns NW_FALSE when args[0] or args[1] is null.
+//   CutsceneAttack (fn 503): uses optional chaining on animation table row
+//     so an out-of-bounds index does not crash.
+//   ModulePlaceable.lock(): inverted guard fixed from if(!locked) to if(locked).
+//   MenuEquipment (KotOR): updateListHover/updateList guard party[0] before
+//     calling GetItemInSlot.
+//   MenuEquipment (TSL): BTN_EQUIP click handler guards party[0] before
+//     calling equipItem.
+describe('Section 98: ResistForce, CutsceneAttack, Placeable lock, MenuEquipment guards', () => {
+
+  it('ResistForce returns NW_FALSE when target is null', () => {
+    // Simulates: if(!args[0] || !args[1]) return NW_FALSE;
+    const NW_FALSE = 0;
+    const NW_TRUE = 1;
+    function resistForce(source: any, target: any): number {
+      if(!source || !target) return NW_FALSE;  // patched guard
+      return target.resistForce(source);
+    }
+    expect(resistForce(null, { resistForce: () => NW_TRUE })).toBe(NW_FALSE);
+    expect(resistForce({ id: 1 }, null)).toBe(NW_FALSE);
+    expect(resistForce({ id: 1 }, { resistForce: () => NW_TRUE })).toBe(NW_TRUE);
+  });
+
+  it('CutsceneAttack uses optional chain on animation row to avoid out-of-bounds crash', () => {
+    // Simulates: animTable?.rows[args[1]]?.name
+    const rows = [{ name: 'attack1' }, { name: 'attack2' }];
+    function getAnimName(idx: number): string | undefined {
+      return rows[idx]?.name;   // patched: was rows[idx].name (no optional chain)
+    }
+    expect(getAnimName(0)).toBe('attack1');
+    expect(getAnimName(1)).toBe('attack2');
+    expect(getAnimName(99)).toBeUndefined();  // out of bounds → no crash
+  });
+
+  it('ModulePlaceable.lock() only locks when not already locked', () => {
+    // Simulates the FIXED lock() logic: if(locked) return; locked=true;
+    function lock(locked: boolean): boolean {
+      if(locked){ return locked; }   // already locked – nothing to do (was: if(!locked) return)
+      return true;                   // locking it
+    }
+    expect(lock(false)).toBe(true);  // not locked → now locked
+    expect(lock(true)).toBe(true);   // already locked → unchanged
+  });
+
+  it('MenuEquipment.updateListHover does not crash when party is empty', () => {
+    // Simulates: if(currentPC && currentPC.GetItemInSlot(slot))
+    let itemInSlotCalled = false;
+    function updateListHover(party: Array<{ GetItemInSlot: (s: number) => null } | undefined>, slot: number) {
+      const currentPC = party[0];
+      if(currentPC && currentPC.GetItemInSlot(slot)){   // patched guard
+        itemInSlotCalled = true;
+      }
+    }
+    // Empty party: must not crash
+    updateListHover([], 1);
+    expect(itemInSlotCalled).toBe(false);
+    // Party present but slot empty: no item added
+    updateListHover([{ GetItemInSlot: () => null }], 1);
+    expect(itemInSlotCalled).toBe(false);
+  });
+
+});

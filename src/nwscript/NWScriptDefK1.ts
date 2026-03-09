@@ -2304,6 +2304,7 @@ NWScriptDefK1.Actions = {
     type: NWScriptDataType.INTEGER,
     args: [NWScriptDataType.OBJECT, NWScriptDataType.OBJECT],
     action: function(this: NWScriptInstance, args: [ModuleObject, ModuleObject]){
+      if(!args[0] || !args[1]) return NW_FALSE;
       return args[1].resistForce(args[0]);
     }
   },
@@ -6896,7 +6897,9 @@ NWScriptDefK1.Actions = {
     args: [NWScriptDataType.OBJECT, NWScriptDataType.INTEGER, NWScriptDataType.INTEGER, NWScriptDataType.INTEGER],
     action: function(this: NWScriptInstance, args: [ModuleObject, number, number, number]){
       if(BitWise.InstanceOfObject(args[0], ModuleObjectType.ModuleCreature) || BitWise.InstanceOfObject(args[0], ModuleObjectType.ModulePlaceable)){
-        this.caller.attackCreature(args[0], undefined, true, args[3], GameState.TwoDAManager.datatables.get('animations').rows[args[1]].name, args[2]);
+        const animTable = GameState.TwoDAManager.datatables.get('animations');
+        const animRow = animTable?.rows[args[1]];
+        this.caller.attackCreature(args[0], undefined, true, args[3], animRow?.name, args[2]);
       }else{
         console.error('attackCreature', args[0]);
       }
