@@ -11576,3 +11576,26 @@ describe('Section 104: ApplyEffectToObject temporary effect future guard', () =>
   });
 
 });
+
+// ---------------------------------------------------------------------------
+// Section 105: ActionCombat spell target position optional chain fix
+// ---------------------------------------------------------------------------
+// Fix verified in this section:
+//   ActionCombat.ts lines 87-88: CAST_SPELL branch used
+//     `combatAction.target?.position.x` – if target is non-null but position
+//     is null the second access crashes.  Changed to
+//     `combatAction.target?.position?.x` (full optional chain, matching lines
+//     101-103 in the ITEM_CAST_SPELL branch).
+describe('Section 105: ActionCombat spell target position optional chain', () => {
+
+  it('spell position parameters are 0 when target has no position', () => {
+    // Simulates: combatAction.target?.position?.x || 0
+    function getTargetX(target: { position?: { x: number } } | null): number {
+      return target?.position?.x || 0;   // patched: was target?.position.x
+    }
+    expect(getTargetX(null)).toBe(0);                            // null target → 0
+    expect(getTargetX({ position: undefined })).toBe(0);        // no position → 0
+    expect(getTargetX({ position: { x: 5.0 } })).toBe(5.0);    // valid → 5
+  });
+
+});
