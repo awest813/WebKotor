@@ -156,7 +156,7 @@ export class MenuAbilities extends K1_MenuAbilities {
       //skip unsupported spells
       if(allowedTypes.indexOf(usertype) == -1){ continue; }
 
-      if(!(creature?.getHasSpell(id) ?? false) && unknownSpells.indexOf(id) == -1){ continue; }
+      if(!creature?.getHasSpell(id) && unknownSpells.indexOf(id) == -1){ continue; }
 
       allowedSpells.push(spell);
     }
@@ -177,7 +177,7 @@ export class MenuAbilities extends K1_MenuAbilities {
       //MID SPELL
       const midSpell = midSpells.find( (curSpell) => {
         const prereqs = curSpell.prerequisites.split('_').map((id:string) => parseInt(id));
-        return prereqs[0] == id && (creature?.getHasSpell(curSpell.__index) ?? false);
+        return prereqs[0] == id && creature?.getHasSpell(curSpell.__index);
       });
 
       if(midSpell){ 
@@ -187,7 +187,7 @@ export class MenuAbilities extends K1_MenuAbilities {
       //END SPELL
       const endSpell = endSpells.find( (curSpell) => {
         const prereqs = curSpell.prerequisites.split('_').map((id:string) => parseInt(id));
-        return prereqs[0] == id && (creature?.getHasSpell(curSpell.__index) ?? false);
+        return prereqs[0] == id && creature?.getHasSpell(curSpell.__index);
       });
 
       if(endSpell){ 

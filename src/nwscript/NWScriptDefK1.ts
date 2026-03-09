@@ -3526,10 +3526,10 @@ NWScriptDefK1.Actions = {
       }else if(this.conversation){
         GameState.CutsceneManager.startConversation(this.conversation, this.caller, args[1] as any);
         return NW_TRUE;
-      }else if(this.caller.conversation){
+      }else if(this.caller?.conversation){
         GameState.CutsceneManager.startConversation(this.caller.conversation, this.caller, args[1] as any);
         return NW_TRUE;
-      }else if(this.listenPatternSpeaker.conversation){
+      }else if(this.listenPatternSpeaker?.conversation){
         GameState.CutsceneManager.startConversation(this.listenPatternSpeaker.conversation, this.caller, this.listenPatternSpeaker as any);
         return NW_TRUE;
       }else{
