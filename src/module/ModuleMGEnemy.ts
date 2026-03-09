@@ -163,7 +163,7 @@ export class ModuleMGEnemy extends ModuleObject {
       if(this.alive){
         this.container.getWorldPosition(GameState.raycaster.ray.origin);
         this.container.getWorldDirection(GameState.raycaster.ray.direction);
-        if(GameState.raycaster.ray.intersectsSphere(GameState.module.area.miniGame.player.sphere)){
+        if(GameState.raycaster.ray.intersectsSphere(GameState.module?.area?.miniGame?.player?.sphere)){
           this.gunBanks[i].fire();
         }
       }

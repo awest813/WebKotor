@@ -2131,7 +2131,7 @@ export class ModuleObject {
       }
     }
 
-    if(notifyCreatures){
+    if(notifyCreatures && GameState.module?.area){
       for(let i = 0, len = GameState.module.area.creatures.length; i < len; i++){
         const creature = GameState.module.area.creatures[i];
         if(creature != (this as any) && !creature.isDead()){
