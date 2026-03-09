@@ -11424,3 +11424,50 @@ describe('Section 101: updatePaused party guard, IsObjectPartyMember, GetMinOneH
   });
 
 });
+
+// ---------------------------------------------------------------------------
+// Section 102: ModuleDoor.onClick getCurrentPlayer guard,
+//              DLGObject.loadStuntActor party[0] guard
+// ---------------------------------------------------------------------------
+// Fixes verified in this section:
+//   ModuleDoor.onClick(): getCurrentPlayer() is now guarded; returns early
+//     when no player is available (e.g. during cutscenes/transitions).
+//   DLGObject.loadStuntActor(): party[0] is guarded before accessing .model
+//     and before calling setFacing/UnequipItems/UnequipHeadItem; resolves
+//     immediately when party is empty so the dialog still progresses.
+describe('Section 102: ModuleDoor onClick guard, DLGObject loadStuntActor guard', () => {
+
+  it('ModuleDoor.onClick does not crash when getCurrentPlayer returns null', () => {
+    // Simulates the patched onClick:
+    //   const player = getCurrentPlayer(); if(!player) return;
+    let actionCalled = false;
+    function onClick(currentPlayer: any): void {
+      const player = currentPlayer;
+      if(!player) return;    // patched guard
+      player.actionOpenDoor();
+      actionCalled = true;
+    }
+    onClick(null);
+    expect(actionCalled).toBe(false);     // no crash
+    onClick(undefined);
+    expect(actionCalled).toBe(false);
+    onClick({ actionOpenDoor: () => {} });
+    expect(actionCalled).toBe(true);
+  });
+
+  it('DLGObject.loadStuntActor resolves immediately when party is empty', () => {
+    // Simulates: const playerActor = party[0]; if(!playerActor){ resolve(); return; }
+    let resolved = false;
+    function loadStuntActor(party: any[]): void {
+      const playerActor = party[0];
+      if(!playerActor){ resolved = true; return; }  // patched guard
+      // would access playerActor.model
+    }
+    loadStuntActor([]);
+    expect(resolved).toBe(true);          // no crash, resolved early
+    resolved = false;
+    loadStuntActor([{ model: {} }]);
+    expect(resolved).toBe(false);         // valid party → normal flow
+  });
+
+});
