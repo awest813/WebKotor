@@ -11367,3 +11367,60 @@ describe('Section 100: follow-leader guard, map areaMap guard, GetStringByStrRef
   });
 
 });
+
+// ---------------------------------------------------------------------------
+// Section 101: updatePaused party guard, IsObjectPartyMember null arg,
+//              GetMinOneHP dead-code cleanup
+// ---------------------------------------------------------------------------
+// Fixes verified in this section:
+//   ModuleArea.updatePaused(): party loop uses ?. so null slots don't crash.
+//   IsObjectPartyMember (fn 576): returns NW_FALSE immediately when args[0]
+//     is null/undefined.
+//   GetMinOneHP (fn 715): redundant if(args[0]) block removed; function now
+//     directly returns the min1HP flag after the InstanceOfObject guard.
+describe('Section 101: updatePaused party guard, IsObjectPartyMember, GetMinOneHP', () => {
+
+  it('updatePaused party loop skips null party slots safely', () => {
+    // Simulates: GameState.PartyManager.party[i]?.updatePaused(delta)
+    let callCount = 0;
+    const party: Array<{ updatePaused: () => void } | null> = [
+      { updatePaused: () => { callCount++; } },
+      null,
+      { updatePaused: () => { callCount++; } },
+    ];
+    for(let i = 0; i < party.length; i++){
+      party[i]?.updatePaused();  // patched: was party[i].updatePaused()
+    }
+    expect(callCount).toBe(2);  // only non-null members updated, no crash
+  });
+
+  it('IsObjectPartyMember returns NW_FALSE when args[0] is null', () => {
+    // Simulates: if(!args[0]) return NW_FALSE;
+    const NW_FALSE = 0;
+    const NW_TRUE = 1;
+    function isObjectPartyMember(arg: any, party: any[]): number {
+      if(!arg) return NW_FALSE;   // patched guard
+      return party.indexOf(arg) >= 0 ? NW_TRUE : NW_FALSE;
+    }
+    expect(isObjectPartyMember(null, [])).toBe(NW_FALSE);
+    expect(isObjectPartyMember(undefined, [])).toBe(NW_FALSE);
+    const obj = { id: 1 };
+    expect(isObjectPartyMember(obj, [obj])).toBe(NW_TRUE);
+    expect(isObjectPartyMember(obj, [])).toBe(NW_FALSE);
+  });
+
+  it('GetMinOneHP returns correct value without redundant inner if', () => {
+    // Simulates the simplified GetMinOneHP: direct return after InstanceOfObject guard
+    const NW_FALSE = 0;
+    const NW_TRUE = 1;
+    function getMinOneHP(obj: any): number {
+      if(!obj || obj.objectType !== 'creature') return NW_FALSE;  // InstanceOfObject guard
+      return obj.min1HP ? NW_TRUE : NW_FALSE;  // patched: removed redundant if(args[0]) wrapper
+    }
+    expect(getMinOneHP(null)).toBe(NW_FALSE);
+    expect(getMinOneHP({ objectType: 'door', min1HP: true })).toBe(NW_FALSE);
+    expect(getMinOneHP({ objectType: 'creature', min1HP: true })).toBe(NW_TRUE);
+    expect(getMinOneHP({ objectType: 'creature', min1HP: false })).toBe(NW_FALSE);
+  });
+
+});

@@ -538,7 +538,7 @@ export class ModuleArea extends ModuleObject {
 
     //update party
     for(let i = 0; i < partyCount; i++){
-      GameState.PartyManager.party[i].updatePaused(delta);
+      GameState.PartyManager.party[i]?.updatePaused(delta);
     }
     
     //update creatures

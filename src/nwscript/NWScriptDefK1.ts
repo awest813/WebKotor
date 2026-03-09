@@ -7834,6 +7834,7 @@ NWScriptDefK1.Actions = {
     type: NWScriptDataType.INTEGER,
     args: [NWScriptDataType.OBJECT],
     action: function(this: NWScriptInstance, args: [ModuleCreature]){
+      if(!args[0]) return NW_FALSE;
       return ( GameState.PartyManager.party.indexOf(args[0]) >= 0 || args[0] == GameState.PartyManager.Player ? NW_TRUE : NW_FALSE );
     }
   },
@@ -9341,10 +9342,7 @@ NWScriptDefK1.Actions = {
     args: [NWScriptDataType.OBJECT],
     action: function(this: NWScriptInstance, args: [ModuleObject]){
       if(!(BitWise.InstanceOfObject(args[0], ModuleObjectType.ModuleCreature))) return NW_FALSE;
-      if(args[0]){
-        return args[0].min1HP ? NW_TRUE : NW_FALSE;
-      }
-      return 0;
+      return args[0].min1HP ? NW_TRUE : NW_FALSE;
     }
   },
   716:{
