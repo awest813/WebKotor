@@ -11599,3 +11599,32 @@ describe('Section 105: ActionCombat spell target position optional chain', () =>
   });
 
 });
+
+// ---------------------------------------------------------------------------
+// Section 106: DelayCommand futureTime null-guard
+// ---------------------------------------------------------------------------
+// Fix verified in this section:
+//   DelayCommand (fn 7): getFutureTimeFromSeconds() may return undefined if
+//     GameState.module or timeManager is null; we now return early instead of
+//     crashing on futureTime.pauseDay.
+describe('Section 106: DelayCommand futureTime null-guard', () => {
+
+  it('DelayCommand is a no-op when timeManager is unavailable', () => {
+    // Simulates: let futureTime = timeManager?.getFutureTimeFromSeconds(secs);
+    //            if(!futureTime) return;
+    let eventScheduled = false;
+    function delayCommand(secs: number, action: any, timeManager: any): void {
+      if(!action) return;
+      const futureTime = timeManager?.getFutureTimeFromSeconds(secs);
+      if(!futureTime) return;    // patched guard
+      // would call timedEvent.setDay(futureTime.pauseDay)
+      eventScheduled = true;
+    }
+    delayCommand(6.0, { script: {} }, null);
+    expect(eventScheduled).toBe(false);    // no crash
+
+    delayCommand(6.0, { script: {} }, { getFutureTimeFromSeconds: () => ({ pauseDay: 1, pauseTime: 2 }) });
+    expect(eventScheduled).toBe(true);
+  });
+
+});

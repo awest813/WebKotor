@@ -147,7 +147,8 @@ NWScriptDefK1.Actions = {
     args: [NWScriptDataType.FLOAT, NWScriptDataType.ACTION],
     action: function(this: NWScriptInstance, args: [number, any]){
       if(args[1] == null || !args[1].script) return;
-      let futureTime = GameState.module?.timeManager?.getFutureTimeFromSeconds(args[0])
+      let futureTime = GameState.module?.timeManager?.getFutureTimeFromSeconds(args[0]);
+      if(!futureTime) return;
       let timedEvent = new GameState.GameEventFactory.EventTimedEvent();
       timedEvent.setCaller(this.caller);
       timedEvent.setObject(this.caller);
