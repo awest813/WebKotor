@@ -2971,7 +2971,7 @@ export class ModuleCreature extends ModuleObject {
     const exptable2DA = GameState.TwoDAManager.datatables.get('exptable');
     if(exptable2DA){
       let nextLevelEXP = exptable2DA.rows[level];
-      if(this.getXP() >= parseInt(nextLevelEXP.xp)){
+      if(nextLevelEXP && this.getXP() >= parseInt(nextLevelEXP.xp)){
         return true;
       }
     }

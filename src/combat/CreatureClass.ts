@@ -111,11 +111,11 @@ export class CreatureClass {
   }
 
   getBaseAttackBonus(){
-    return this.attackBonuses[this.level].bab;
+    return this.attackBonuses?.[this.level]?.bab ?? 0;
   }
 
   getACBonus(){
-    return this.acbonuses[this.level];
+    return this.acbonuses?.[this.level] ?? 0;
   }
 
   isFeatAvailable( feat: any ){

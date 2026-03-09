@@ -12558,3 +12558,143 @@ describe('Section 127: KotOR InGameOverlay getControlByName optional-chain in ev
   });
 
 });
+
+describe('Section 128: CreatureClass getBaseAttackBonus and getACBonus null-guards (Dantooine AddMultiClass fix)', () => {
+
+  it('getBaseAttackBonus returns 0 when attackBonuses array is empty (new class, level 0)', () => {
+    // Simulates: new CreatureClass created by AddMultiClass before 2DA tables load
+    function getBaseAttackBonus(attackBonuses: any[], level: number): number {
+      return attackBonuses?.[level]?.bab ?? 0;
+    }
+    expect(getBaseAttackBonus([], 0)).toBe(0);
+  });
+
+  it('getBaseAttackBonus returns correct bab when attackBonuses is populated', () => {
+    function getBaseAttackBonus(attackBonuses: any[], level: number): number {
+      return attackBonuses?.[level]?.bab ?? 0;
+    }
+    const bonuses = [{ bab: 0 }, { bab: 1 }, { bab: 2 }];
+    expect(getBaseAttackBonus(bonuses, 0)).toBe(0);
+    expect(getBaseAttackBonus(bonuses, 1)).toBe(1);
+  });
+
+  it('getBaseAttackBonus returns 0 when attackBonuses is undefined', () => {
+    function getBaseAttackBonus(attackBonuses: any[] | undefined, level: number): number {
+      return attackBonuses?.[level]?.bab ?? 0;
+    }
+    expect(getBaseAttackBonus(undefined, 0)).toBe(0);
+  });
+
+  it('getACBonus returns 0 when acbonuses array is empty (new class, level 0)', () => {
+    function getACBonus(acbonuses: number[], level: number): number {
+      return acbonuses?.[level] ?? 0;
+    }
+    expect(getACBonus([], 0)).toBe(0);
+  });
+
+  it('getACBonus returns correct value when acbonuses is populated', () => {
+    function getACBonus(acbonuses: number[], level: number): number {
+      return acbonuses?.[level] ?? 0;
+    }
+    const bonuses = [0, 1, 2, 3];
+    expect(getACBonus(bonuses, 0)).toBe(0);
+    expect(getACBonus(bonuses, 2)).toBe(2);
+  });
+
+});
+
+describe('Section 129: ModuleCreature.canLevelUp exptable row null-guard (max-level fix)', () => {
+
+  it('does not crash when exptable row is undefined (max level)', () => {
+    // Simulates: exptable has only 20 rows (indices 0-19) and level=20
+    function canLevelUp(rows: Record<number, any>, level: number, xp: number): boolean {
+      const nextLevelEXP = rows[level];
+      if(nextLevelEXP && xp >= parseInt(nextLevelEXP.xp)){
+        return true;
+      }
+      return false;
+    }
+    const rows: Record<number, any> = {};
+    for(let i = 0; i < 20; i++) rows[i] = { xp: String(i * 1000) };
+    // Level 20 has no row
+    expect(canLevelUp(rows, 20, 99999)).toBe(false);
+    expect(() => canLevelUp(rows, 20, 99999)).not.toThrow();
+  });
+
+  it('returns true when XP meets next level requirement', () => {
+    function canLevelUp(rows: Record<number, any>, level: number, xp: number): boolean {
+      const nextLevelEXP = rows[level];
+      if(nextLevelEXP && xp >= parseInt(nextLevelEXP.xp)){
+        return true;
+      }
+      return false;
+    }
+    const rows: Record<number, any> = { 3: { xp: '3000' }, 4: { xp: '6000' } };
+    expect(canLevelUp(rows, 3, 3000)).toBe(true);
+    expect(canLevelUp(rows, 3, 2999)).toBe(false);
+  });
+
+});
+
+describe('Section 130: ExploreAreaForPlayer areaMap optional-chain guard (fn 403)', () => {
+
+  it('does not crash when areaMap is undefined', () => {
+    // Simulates: (args[0] as ModuleArea).areaMap?.revealEntireMap()
+    let revealed = false;
+    const area: any = { areaMap: undefined };
+    area.areaMap?.revealEntireMap?.();
+    expect(revealed).toBe(false);
+  });
+
+  it('calls revealEntireMap when areaMap is defined', () => {
+    let revealed = false;
+    const area: any = { areaMap: { revealEntireMap: () => { revealed = true; } } };
+    area.areaMap?.revealEntireMap?.();
+    expect(revealed).toBe(true);
+  });
+
+});
+
+describe('Section 131: MenuGalaxyMap BTN_ACCEPT activePlanet null-guard', () => {
+
+  it('does not crash when activePlanet is undefined and BTN_ACCEPT is clicked', () => {
+    // Simulates: if(!this.activePlanet?.selectable){ if(this.activePlanet?.lockedOutReason >= 0)
+    let confirmCalled = false;
+    function handleAccept(activePlanet: any) {
+      if(!activePlanet?.selectable){
+        if(activePlanet?.lockedOutReason >= 0){
+          confirmCalled = true;
+        }
+      }
+    }
+    expect(() => handleAccept(undefined)).not.toThrow();
+    expect(confirmCalled).toBe(false);
+  });
+
+  it('shows confirm dialog when planet is not selectable and has a locked reason', () => {
+    let confirmCalledWith = -1;
+    function handleAccept(activePlanet: any) {
+      if(!activePlanet?.selectable){
+        if(activePlanet?.lockedOutReason >= 0){
+          confirmCalledWith = activePlanet.lockedOutReason;
+        }
+      }
+    }
+    handleAccept({ selectable: false, lockedOutReason: 42 });
+    expect(confirmCalledWith).toBe(42);
+  });
+
+  it('does not show confirm dialog when lockedOutReason is -1 (default)', () => {
+    let confirmCalled = false;
+    function handleAccept(activePlanet: any) {
+      if(!activePlanet?.selectable){
+        if(activePlanet?.lockedOutReason >= 0){
+          confirmCalled = true;
+        }
+      }
+    }
+    handleAccept({ selectable: false, lockedOutReason: -1 });
+    expect(confirmCalled).toBe(false);
+  });
+
+});

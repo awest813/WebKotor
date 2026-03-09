@@ -5612,7 +5612,7 @@ NWScriptDefK1.Actions = {
     args: [NWScriptDataType.OBJECT, NWScriptDataType.OBJECT],
     action: function(this: NWScriptInstance, args: [ModuleObject, ModuleObject]){
       if(BitWise.InstanceOfObject(args[0], ModuleObjectType.ModuleArea)){
-        (args[0] as ModuleArea).areaMap.revealEntireMap();
+        (args[0] as ModuleArea).areaMap?.revealEntireMap();
       }
     }
   },
