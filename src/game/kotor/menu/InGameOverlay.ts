@@ -388,18 +388,18 @@ export class InGameOverlay extends GameMenu {
 
       for(let i = 0; i < GameState.ActionMenuManager.TARGET_MENU_COUNT; i++){
 
-        this.getControlByName('LBL_TARGET'+i).addEventListener('click', (e) => {
+        this.getControlByName('LBL_TARGET'+i)?.addEventListener('click', (e) => {
           e.stopPropagation();
           GameState.ActionMenuManager.onTargetMenuAction(i);
         });
 
-        this.getControlByName('BTN_TARGETUP'+i).addEventListener('click', (e) => {
+        this.getControlByName('BTN_TARGETUP'+i)?.addEventListener('click', (e) => {
           e.stopPropagation();
           GameState.ActionMenuManager.ActionPanels.targetPanels[i].previousAction();
           this.UpdateTargetUIIcon(i);
         });
 
-        this.getControlByName('BTN_TARGETDOWN'+i).addEventListener('click', (e) => {
+        this.getControlByName('BTN_TARGETDOWN'+i)?.addEventListener('click', (e) => {
           e.stopPropagation();
           GameState.ActionMenuManager.ActionPanels.targetPanels[i].nextAction();
           this.UpdateTargetUIIcon(i);
@@ -409,18 +409,18 @@ export class InGameOverlay extends GameMenu {
 
       for(let i = 0; i < GameState.ActionMenuManager.SELF_MENU_COUNT; i++){
 
-        this.getControlByName('LBL_ACTION'+i).addEventListener('click', (e) => {
+        this.getControlByName('LBL_ACTION'+i)?.addEventListener('click', (e) => {
           e.stopPropagation();
           GameState.ActionMenuManager.onSelfMenuAction(i);
         });
 
-        this.getControlByName('BTN_ACTIONUP'+i).addEventListener('click', (e) => {
+        this.getControlByName('BTN_ACTIONUP'+i)?.addEventListener('click', (e) => {
           e.stopPropagation();
           GameState.ActionMenuManager.ActionPanels.selfPanels[i].previousAction();
           this.UpdateSelfUIIcon(i);
         });
 
-        this.getControlByName('BTN_ACTIONDOWN'+i).addEventListener('click', (e) => {
+        this.getControlByName('BTN_ACTIONDOWN'+i)?.addEventListener('click', (e) => {
           e.stopPropagation();
           GameState.ActionMenuManager.ActionPanels.selfPanels[i].nextAction();
           this.UpdateSelfUIIcon(i);

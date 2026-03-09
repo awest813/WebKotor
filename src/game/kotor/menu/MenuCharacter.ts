@@ -247,7 +247,11 @@ export class MenuCharacter extends GameMenu {
     this.LBL_WIS_MOD?.setText(Math.floor((character.getWIS() - 10) / 2));
     this.LBL_CHA_MOD?.setText(Math.floor((character.getCHA() - 10) / 2));
     this.LBL_EXPERIENCE_STAT?.setText(character.experience.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','));
-    this.LBL_NEEDED_XP?.setText(GameState.TwoDAManager.datatables.get('exptable').rows[character.getTotalClassLevel()].xp.replace(/\B(?=(\d{3})+(?!\d))/g, ','));
+    const exptable = GameState.TwoDAManager.datatables.get('exptable');
+    if(exptable) {
+      const xpRow = exptable.rows[character.getTotalClassLevel()];
+      if(xpRow) this.LBL_NEEDED_XP?.setText(xpRow.xp.replace(/\B(?=(\d{3})+(?!\d))/g, ','));
+    }
     if (character.canLevelUp()) {
       this.BTN_AUTO?.show();
     } else {
@@ -266,6 +270,7 @@ export class MenuCharacter extends GameMenu {
       btn_change = this.getControlByName('BTN_CHANGE' + i);
       if (btn_change) {
         const partyMember = GameState.PartyManager.party[i];
+        if(!partyMember) continue;
         const portraitResRef = partyMember.getPortraitResRef();
         if (i) {
           btn_change.show();

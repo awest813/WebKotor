@@ -204,6 +204,7 @@ export class MenuEquipment extends GameMenu {
         if(this.selectedItem instanceof ModuleItem){
           //console.log('selectedItem', this.selectedItem, this.slot, );
           let currentPC = GameState.PartyManager.party[0];
+          if(!currentPC) return;
           if(this.selectedItem instanceof GUIItemNone){
             currentPC.unequipSlot(this.slot);
           }else if(this.selectedItem instanceof ModuleItem){

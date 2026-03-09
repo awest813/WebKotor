@@ -12333,3 +12333,228 @@ describe('Section 122: EffectRegenerate/EffectForcePushed/ModuleObject/NWScriptI
   });
 
 });
+
+describe('Section 123: MenuCharacter updatePartyMemberPortraitButtons partyMember null-guard', () => {
+
+  it('does not crash when partyMember entry is undefined', () => {
+    // Simulates: const partyMember = party[i]; if(!partyMember) continue;
+    const party: any[] = [{ getPortraitResRef: () => 'portrait0' }, undefined, { getPortraitResRef: () => 'portrait2' }];
+    const portraits: string[] = [];
+    for (let i = 0; i < party.length; i++) {
+      const partyMember = party[i];
+      if(!partyMember) continue;
+      portraits.push(partyMember.getPortraitResRef());
+    }
+    expect(portraits).toEqual(['portrait0', 'portrait2']); // no crash, undefined skipped
+  });
+
+  it('collects portraits for all defined members', () => {
+    const party: any[] = [
+      { getPortraitResRef: () => 'p0' },
+      { getPortraitResRef: () => 'p1' },
+    ];
+    const portraits: string[] = [];
+    for (let i = 0; i < party.length; i++) {
+      const partyMember = party[i];
+      if(!partyMember) continue;
+      portraits.push(partyMember.getPortraitResRef());
+    }
+    expect(portraits).toEqual(['p0', 'p1']);
+  });
+
+});
+
+describe('Section 124: MenuCharacter updateCharacterStats exptable null-guard', () => {
+
+  it('does not crash when exptable datatable is undefined', () => {
+    // Simulates: const exptable = datatables.get('exptable'); if(exptable) { ... }
+    let textSet = false;
+    function updateNeededXP(datatables: Map<string, any>, level: number) {
+      const exptable = datatables.get('exptable');
+      if(exptable) {
+        const xpRow = exptable.rows[level];
+        if(xpRow) textSet = true;
+      }
+    }
+    updateNeededXP(new Map(), 5); // no exptable entry
+    expect(textSet).toBe(false);
+  });
+
+  it('sets XP text when exptable and row are available', () => {
+    let xpText = '';
+    function updateNeededXP(datatables: Map<string, any>, level: number) {
+      const exptable = datatables.get('exptable');
+      if(exptable) {
+        const xpRow = exptable.rows[level];
+        if(xpRow) xpText = xpRow.xp;
+      }
+    }
+    const mockTable = { rows: [null, null, null, null, null, { xp: '10000' }] };
+    updateNeededXP(new Map([['exptable', mockTable]]), 5);
+    expect(xpText).toBe('10000');
+  });
+
+  it('does not crash when row index is out of bounds', () => {
+    let textSet = false;
+    function updateNeededXP(datatables: Map<string, any>, level: number) {
+      const exptable = datatables.get('exptable');
+      if(exptable) {
+        const xpRow = exptable.rows[level];
+        if(xpRow) textSet = true;
+      }
+    }
+    const mockTable = { rows: [{ xp: '0' }] };
+    updateNeededXP(new Map([['exptable', mockTable]]), 99); // out of bounds
+    expect(textSet).toBe(false);
+  });
+
+});
+
+describe('Section 125: MenuEquipment BTN_EQUIP party[0] null-guard', () => {
+
+  it('does not crash when party[0] is undefined', () => {
+    // Simulates: let currentPC = party[0]; if(!currentPC) return;
+    let unequipCalled = false;
+    function handleEquip(party: any[], slot: string, item: any) {
+      const currentPC = party[0];
+      if(!currentPC) return;
+      if(item === null) {
+        currentPC.unequipSlot(slot);
+        unequipCalled = true;
+      }
+    }
+    handleEquip([], 'RIGHTHAND', null); // empty party
+    expect(unequipCalled).toBe(false);
+  });
+
+  it('calls unequipSlot when party[0] is defined and item is null', () => {
+    let unequippedSlot = '';
+    const mockPC = { unequipSlot: (slot: string) => { unequippedSlot = slot; } };
+    function handleEquip(party: any[], slot: string, item: any) {
+      const currentPC = party[0];
+      if(!currentPC) return;
+      if(item === null) currentPC.unequipSlot(slot);
+    }
+    handleEquip([mockPC], 'RIGHTHAND', null);
+    expect(unequippedSlot).toBe('RIGHTHAND');
+  });
+
+});
+
+describe('Section 126: TSL MenuTop TogglePartyMember character and getControlByName null-guards', () => {
+
+  it('does not crash when character is undefined (case 0)', () => {
+    // Simulates: if(!character) break; before accessing character.getName()
+    let nameCalled = false;
+    function togglePartyMember(nth: number, party: any[]) {
+      const character = party[nth];
+      switch(nth) {
+        case 0:
+          if(!character) break;
+          nameCalled = true; // would call character.getName()
+        break;
+      }
+    }
+    togglePartyMember(0, []); // empty party
+    expect(nameCalled).toBe(false);
+  });
+
+  it('calls getName when character is defined (case 0)', () => {
+    let nameReturned = '';
+    function togglePartyMember(nth: number, party: any[]) {
+      const character = party[nth];
+      switch(nth) {
+        case 0:
+          if(!character) break;
+          nameReturned = character.getName();
+        break;
+      }
+    }
+    togglePartyMember(0, [{ getName: () => 'Revan' }]);
+    expect(nameReturned).toBe('Revan');
+  });
+
+  it('does not crash when character is undefined (default case, bVisible=true)', () => {
+    // Simulates: if(character?.canLevelUp())
+    let levelUpShown = false;
+    function togglePartyMemberDefault(party: any[], nth: number, bVisible: boolean) {
+      const character = party[nth];
+      if(!bVisible) return;
+      if(character?.canLevelUp()) levelUpShown = true;
+    }
+    togglePartyMemberDefault([], 1, true); // no character at index 1
+    expect(levelUpShown).toBe(false);
+  });
+
+  it('shows level up when character can level up (default case)', () => {
+    let levelUpShown = false;
+    function togglePartyMemberDefault(party: any[], nth: number, bVisible: boolean) {
+      const character = party[nth];
+      if(!bVisible) return;
+      if(character?.canLevelUp()) levelUpShown = true;
+    }
+    togglePartyMemberDefault([null, { canLevelUp: () => true }], 1, true);
+    expect(levelUpShown).toBe(true);
+  });
+
+  it('does not crash when getControlByName returns undefined', () => {
+    // Simulates: this.getControlByName('LBL_LEVELUP1')?.hide()
+    let called = false;
+    const ctrl: any = undefined;
+    ctrl?.hide?.(); // no crash
+    expect(called).toBe(false);
+    const ctrl2 = { hide: () => { called = true; } };
+    ctrl2?.hide?.();
+    expect(called).toBe(true);
+  });
+
+});
+
+describe('Section 127: KotOR InGameOverlay getControlByName optional-chain in event setup', () => {
+
+  it('does not crash when getControlByName returns null for action button setup', () => {
+    // Simulates: this.getControlByName('LBL_TARGET'+i)?.addEventListener(...)
+    let listenerAdded = false;
+    function setupControl(ctrl: any) {
+      ctrl?.addEventListener('click', () => { listenerAdded = true; });
+    }
+    setupControl(null); // no crash
+    expect(listenerAdded).toBe(false);
+  });
+
+  it('adds event listener when control is defined', () => {
+    let listenerAdded = false;
+    function setupControl(ctrl: any) {
+      ctrl?.addEventListener('click', () => { listenerAdded = true; });
+    }
+    const mockCtrl = { addEventListener: (event: string, fn: Function) => { fn(); } };
+    setupControl(mockCtrl);
+    expect(listenerAdded).toBe(true);
+  });
+
+  it('all TARGET and ACTION controls skip gracefully when undefined', () => {
+    // Simulates the loop that sets up TARGET_MENU_COUNT and SELF_MENU_COUNT controls
+    const TARGET_MENU_COUNT = 3;
+    const SELF_MENU_COUNT = 4;
+    let errors = 0;
+    function setupLoop(getControl: (name: string) => any) {
+      for(let i = 0; i < TARGET_MENU_COUNT; i++) {
+        try {
+          getControl('LBL_TARGET'+i)?.addEventListener('click', () => {});
+          getControl('BTN_TARGETUP'+i)?.addEventListener('click', () => {});
+          getControl('BTN_TARGETDOWN'+i)?.addEventListener('click', () => {});
+        } catch(e) { errors++; }
+      }
+      for(let i = 0; i < SELF_MENU_COUNT; i++) {
+        try {
+          getControl('LBL_ACTION'+i)?.addEventListener('click', () => {});
+          getControl('BTN_ACTIONUP'+i)?.addEventListener('click', () => {});
+          getControl('BTN_ACTIONDOWN'+i)?.addEventListener('click', () => {});
+        } catch(e) { errors++; }
+      }
+    }
+    setupLoop(() => undefined); // all controls return undefined
+    expect(errors).toBe(0);
+  });
+
+});

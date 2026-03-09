@@ -220,17 +220,18 @@ export class MenuTop extends K1_MenuTop {
     const character = GameState.PartyManager.party[nth];
     switch (nth) {
       case 0:
-        this.getControlByName('LBL_CMBTEFCTRED' + (nth + 1)).hide();
-        this.getControlByName('LBL_CMBTEFCTINC' + (nth + 1)).hide();
-        this.getControlByName('LBL_DEBILATATED' + (nth + 1)).hide();
-        this.getControlByName('LBL_DISABLE' + (nth + 1)).hide();
-        this.getControlByName('LBL_LEVELUP' + (nth + 1)).hide();
-        this.getControlByName('LBL_BACK' + (nth + 1)).show();
-        this.getControlByName('LBL_CHAR' + (nth + 1)).show();
-        this.getControlByName('LBL_BACK' + (nth + 1)).show();
-        this.getControlByName('PB_FORCE' + (nth + 1)).show();
-        this.getControlByName('PB_VIT' + (nth + 1)).show();
+        this.getControlByName('LBL_CMBTEFCTRED' + (nth + 1))?.hide();
+        this.getControlByName('LBL_CMBTEFCTINC' + (nth + 1))?.hide();
+        this.getControlByName('LBL_DEBILATATED' + (nth + 1))?.hide();
+        this.getControlByName('LBL_DISABLE' + (nth + 1))?.hide();
+        this.getControlByName('LBL_LEVELUP' + (nth + 1))?.hide();
+        this.getControlByName('LBL_BACK' + (nth + 1))?.show();
+        this.getControlByName('LBL_CHAR' + (nth + 1))?.show();
+        this.getControlByName('LBL_BACK' + (nth + 1))?.show();
+        this.getControlByName('PB_FORCE' + (nth + 1))?.show();
+        this.getControlByName('PB_VIT' + (nth + 1))?.show();
 
+        if(!character) break;
         this.LBL_CHARNAME.setText(character.getName());
 
         if (character.classes[0]) {
@@ -258,17 +259,17 @@ export class MenuTop extends K1_MenuTop {
       break;
       default:
         if (!bVisible) {
-          this.getControlByName('LBL_LEVELUP' + (nth + 1)).hide();
-          this.getControlByName('LBL_CHAR' + (nth + 1)).hide();
-          this.getControlByName('BTN_CHANGE' + (nth + 1)).hide();
+          this.getControlByName('LBL_LEVELUP' + (nth + 1))?.hide();
+          this.getControlByName('LBL_CHAR' + (nth + 1))?.hide();
+          this.getControlByName('BTN_CHANGE' + (nth + 1))?.hide();
         } else {
-          if(character.canLevelUp()){
-            this.getControlByName('LBL_LEVELUP' + (nth + 1)).show();
+          if(character?.canLevelUp()){
+            this.getControlByName('LBL_LEVELUP' + (nth + 1))?.show();
           }else{
-            this.getControlByName('LBL_LEVELUP' + (nth + 1)).hide();
+            this.getControlByName('LBL_LEVELUP' + (nth + 1))?.hide();
           }
-          this.getControlByName('LBL_CHAR' + (nth + 1)).show();
-          this.getControlByName('BTN_CHANGE' + (nth + 1)).show();
+          this.getControlByName('LBL_CHAR' + (nth + 1))?.show();
+          this.getControlByName('BTN_CHANGE' + (nth + 1))?.show();
         }
       break;
     }
