@@ -256,7 +256,7 @@ export class ModuleItem extends ModuleObject {
   }
 
   getDexBonus(){
-    if(this.baseItemId){
+    if(this.baseItem){
       return this.baseItem.dexBonus || 0;
     }
     return 0;

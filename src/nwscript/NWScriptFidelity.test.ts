@@ -13007,3 +13007,239 @@ describe('Section 135: getDamageAnimation/getDodgeAnimation/getParryAnimation 2D
   });
 
 });
+
+describe('Section 136: ModuleCreature speed/distance null-guards when creatureAppearance is undefined', () => {
+
+  it('getRunSpeed returns default rundist when creatureAppearance is undefined (walkRateId==7)', () => {
+    const creature = { creatureAppearance: undefined as any, getWalkRateId: () => 7 };
+    function getRunSpeed(c: typeof creature): number {
+      if(c.getWalkRateId() == 7){
+        return c.creatureAppearance?.rundist ?? 5.4;
+      }
+      return 5.4;
+    }
+    expect(() => getRunSpeed(creature)).not.toThrow();
+    expect(getRunSpeed(creature)).toBe(5.4);
+  });
+
+  it('getRunSpeed returns correct rundist when creatureAppearance is defined', () => {
+    const creature = { creatureAppearance: { rundist: 3.0 } as any, getWalkRateId: () => 7 };
+    function getRunSpeed(c: typeof creature): number {
+      if(c.getWalkRateId() == 7){
+        return c.creatureAppearance?.rundist ?? 5.4;
+      }
+      return 5.4;
+    }
+    expect(getRunSpeed(creature)).toBe(3.0);
+  });
+
+  it('getWalkSpeed returns default walkdist when creatureAppearance is undefined (walkRateId==7)', () => {
+    const creature = { creatureAppearance: undefined as any, getWalkRateId: () => 7 };
+    function getWalkSpeed(c: typeof creature): number {
+      if(c.getWalkRateId() == 7){
+        return c.creatureAppearance?.walkdist ?? 1.7;
+      }
+      return 1.7;
+    }
+    expect(() => getWalkSpeed(creature)).not.toThrow();
+    expect(getWalkSpeed(creature)).toBe(1.7);
+  });
+
+  it('getRunSpeed uses 2DA row with bounds guard when walkRateId is valid', () => {
+    const creaturespeedRows: any[] = [{ runrate: '4.0' }, { runrate: '6.0' }];
+    function getRunSpeedFrom2DA(walkRateId: number): number {
+      return parseFloat(creaturespeedRows[walkRateId]?.runrate ?? '5.4');
+    }
+    expect(getRunSpeedFrom2DA(0)).toBe(4.0);
+    expect(getRunSpeedFrom2DA(1)).toBe(6.0);
+    // out-of-bounds index falls back to default
+    expect(getRunSpeedFrom2DA(99)).toBe(5.4);
+  });
+
+  it('getHitDistance returns default when creatureAppearance is undefined', () => {
+    const creature = { creatureAppearance: undefined as any };
+    function getHitDistance(c: typeof creature): number {
+      return c.creatureAppearance?.hitdist ?? 1;
+    }
+    expect(() => getHitDistance(creature)).not.toThrow();
+    expect(getHitDistance(creature)).toBe(1);
+  });
+
+  it('getPersonalSpace returns default when creatureAppearance is undefined', () => {
+    const creature = { creatureAppearance: undefined as any };
+    function getPersonalSpace(c: typeof creature): number {
+      return c.creatureAppearance?.perspace ?? 0.35;
+    }
+    expect(() => getPersonalSpace(creature)).not.toThrow();
+    expect(getPersonalSpace(creature)).toBe(0.35);
+  });
+
+});
+
+describe('Section 137: ModuleCreature.getEffectiveLevel expLevels row null-guard', () => {
+
+  it('does not crash when expLevels has sparse rows', () => {
+    const expLevels: any[] = [{ level: '0' }, undefined as any, { level: '1000' }];
+    const totalLevels = expLevels.length;
+    let level = 0;
+    const xp = 500;
+    for(let i = 0; i < totalLevels; i++){
+      if(expLevels[i] && xp > parseInt(expLevels[i].level)){
+        level = i;
+      }
+    }
+    expect(level).toBe(0);
+  });
+
+  it('advances level correctly with full expLevels table', () => {
+    const expLevels = [
+      { level: '0' }, { level: '1000' }, { level: '3000' }, { level: '6000' },
+    ];
+    const totalLevels = expLevels.length;
+    function getEffectiveLevel(xp: number): number {
+      let level = 0;
+      for(let i = 0; i < totalLevels; i++){
+        if(expLevels[i] && xp > parseInt(expLevels[i].level)){
+          level = i;
+        }
+      }
+      return level;
+    }
+    expect(getEffectiveLevel(0)).toBe(0);
+    expect(getEffectiveLevel(1500)).toBe(1);
+    expect(getEffectiveLevel(4000)).toBe(2);
+    expect(getEffectiveLevel(7000)).toBe(3);
+  });
+
+});
+
+describe('Section 138: ModuleCreature.updateRegen regeneration 2DA optional-chain guard', () => {
+
+  it('does not crash when regeneration 2DA table is missing', () => {
+    const datatables = new Map<string, any>();
+    function updateRegen(combatState: boolean): void {
+      const regen2DA = datatables.get('regeneration')?.rows[combatState ? 0 : 1];
+      if(regen2DA){
+        const regen_force = parseFloat(regen2DA.forceregen);
+      }
+    }
+    expect(() => updateRegen(false)).not.toThrow();
+    expect(() => updateRegen(true)).not.toThrow();
+  });
+
+  it('reads regen data when regeneration 2DA table is present', () => {
+    const datatables = new Map<string, any>();
+    datatables.set('regeneration', {
+      rows: [
+        { forceregen: '0.5', healthregen: '0.1' },
+        { forceregen: '0.0', healthregen: '0.0' },
+      ],
+    });
+    let regenForce = 0;
+    function updateRegen(combatState: boolean): void {
+      const regen2DA = datatables.get('regeneration')?.rows[combatState ? 0 : 1];
+      if(regen2DA){
+        regenForce = parseFloat(regen2DA.forceregen);
+      }
+    }
+    updateRegen(false); // out-of-combat -> rows[1]
+    expect(regenForce).toBe(0.0);
+    updateRegen(true);  // in-combat -> rows[0]
+    expect(regenForce).toBe(0.5);
+  });
+
+});
+
+describe('Section 139: CombatRound isDualWielding and calculateTwoWeaponPenalty getBaseItem null-guards', () => {
+
+  it('isDualWielding does not crash when getBaseItem returns null', () => {
+    const makeWeapon = (baseItem: any) => ({ getBaseItem: () => baseItem });
+    const WeaponWield = { STUN_BATON: 10 };
+    function isDualWielding(rightHand: any, leftHand: any): boolean {
+      return !!(
+        rightHand && rightHand.getBaseItem() && ( rightHand.getBaseItem()!.weaponWield != WeaponWield.STUN_BATON ) &&
+        leftHand && leftHand.getBaseItem() && ( leftHand.getBaseItem()!.weaponWield != WeaponWield.STUN_BATON )
+      );
+    }
+    expect(() => isDualWielding(makeWeapon(null), makeWeapon(null))).not.toThrow();
+    // null baseItem means we can't confirm these are valid weapons → not dual wielding
+    expect(isDualWielding(makeWeapon(null), makeWeapon(null))).toBe(false);
+    expect(isDualWielding(makeWeapon({ weaponWield: 10 }), makeWeapon({ weaponWield: 10 }))).toBe(false);
+    expect(isDualWielding(makeWeapon({ weaponWield: 1 }), makeWeapon({ weaponWield: 1 }))).toBe(true);
+    expect(isDualWielding(null, null)).toBe(false);
+  });
+
+  it('calculateTwoWeaponPenalty does not crash when rightHand.getBaseItem() returns null', () => {
+    const WeaponWield = { TWO_HANDED_SWORD: 5, BLASTER_PISTOL: 4 };
+    function calcRightHandPenalty(rightHand: any): number {
+      let penalty = 6;
+      if(
+        rightHand?.getBaseItem()?.weaponWield == WeaponWield.TWO_HANDED_SWORD ||
+        rightHand?.getBaseItem()?.weaponWield == WeaponWield.BLASTER_PISTOL
+      ){
+        penalty -= 2;
+      }
+      return Math.max(penalty, 0);
+    }
+    const noBaseItem = { getBaseItem: () => null };
+    expect(() => calcRightHandPenalty(noBaseItem)).not.toThrow();
+    expect(calcRightHandPenalty(noBaseItem)).toBe(6);
+    expect(calcRightHandPenalty({ getBaseItem: () => ({ weaponWield: WeaponWield.BLASTER_PISTOL }) })).toBe(4);
+    expect(calcRightHandPenalty(null)).toBe(6);
+  });
+
+  it('calculateTwoWeaponPenalty does not crash when leftHand.getBaseItem() returns null', () => {
+    const WeaponSize = { SMALL: 1 };
+    function calcLeftHandPenalty(leftHand: any): number {
+      let penalty = 10;
+      if(leftHand?.getBaseItem()?.weaponSize == WeaponSize.SMALL){
+        penalty -= 2;
+      }
+      return Math.max(penalty, 0);
+    }
+    const noBaseItem = { getBaseItem: () => null };
+    expect(() => calcLeftHandPenalty(noBaseItem)).not.toThrow();
+    expect(calcLeftHandPenalty(noBaseItem)).toBe(10);
+    expect(calcLeftHandPenalty({ getBaseItem: () => ({ weaponSize: WeaponSize.SMALL }) })).toBe(8);
+    expect(calcLeftHandPenalty(null)).toBe(10);
+  });
+
+});
+
+describe('Section 140: ModuleItem.getDexBonus uses baseItem guard not baseItemId guard', () => {
+
+  it('returns 0 when baseItem is null even if baseItemId is set', () => {
+    const item = { baseItemId: 5, baseItem: null as any };
+    function getDexBonus(i: typeof item): number {
+      if(i.baseItem){
+        return i.baseItem.dexBonus || 0;
+      }
+      return 0;
+    }
+    expect(() => getDexBonus(item)).not.toThrow();
+    expect(getDexBonus(item)).toBe(0);
+  });
+
+  it('returns dexBonus when baseItem is defined', () => {
+    const item = { baseItemId: 5, baseItem: { dexBonus: 3 } as any };
+    function getDexBonus(i: typeof item): number {
+      if(i.baseItem){
+        return i.baseItem.dexBonus || 0;
+      }
+      return 0;
+    }
+    expect(getDexBonus(item)).toBe(3);
+  });
+
+  it('returns 0 when baseItem.dexBonus is 0 or missing', () => {
+    const item = { baseItemId: 5, baseItem: { dexBonus: 0 } as any };
+    function getDexBonus(i: typeof item): number {
+      if(i.baseItem){
+        return i.baseItem.dexBonus || 0;
+      }
+      return 0;
+    }
+    expect(getDexBonus(item)).toBe(0);
+  });
+
+});

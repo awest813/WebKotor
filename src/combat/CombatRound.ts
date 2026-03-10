@@ -566,8 +566,8 @@ export class CombatRound {
     const rightHand = creature.equipment.RIGHTHAND;
     const leftHand = creature.equipment.LEFTHAND;
     return (
-      rightHand && ( rightHand.getBaseItem().weaponWield != WeaponWield.STUN_BATON ) &&
-      leftHand && ( leftHand.getBaseItem().weaponWield != WeaponWield.STUN_BATON )
+      rightHand && rightHand.getBaseItem() && ( rightHand.getBaseItem()!.weaponWield != WeaponWield.STUN_BATON ) &&
+      leftHand && leftHand.getBaseItem() && ( leftHand.getBaseItem()!.weaponWield != WeaponWield.STUN_BATON )
     );
   }
 
@@ -595,8 +595,8 @@ export class CombatRound {
         penalty = 4;
       }
       if(
-        rightHand.getBaseItem().weaponWield == WeaponWield.TWO_HANDED_SWORD ||
-        rightHand.getBaseItem().weaponWield == WeaponWield.BLASTER_PISTOL
+        rightHand?.getBaseItem()?.weaponWield == WeaponWield.TWO_HANDED_SWORD ||
+        rightHand?.getBaseItem()?.weaponWield == WeaponWield.BLASTER_PISTOL
       ){
         penalty -= 2;
       }
@@ -615,7 +615,7 @@ export class CombatRound {
       }else if(creature.getHasFeat(CombatFeatType.TWO_WEAPON_FIGHTING)){
         penalty = 6;
       }
-      if(leftHand.getBaseItem().weaponSize == WeaponSize.SMALL){
+      if(leftHand?.getBaseItem()?.weaponSize == WeaponSize.SMALL){
         penalty -= 2;
       }
       return Math.max(penalty, 0);
