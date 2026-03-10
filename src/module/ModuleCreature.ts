@@ -816,7 +816,7 @@ export class ModuleCreature extends ModuleObject {
       // Respect the DisableHealthRegen NWScript flag (fn 858) set on the module.
       const regenDisabled = GameState.module && (GameState.module as any).healthRegenDisabled;
 
-      const regen2DA = GameState.TwoDAManager.datatables.get('regeneration').rows[this.combatData.combatState ? 0 : 1];
+      const regen2DA = GameState.TwoDAManager.datatables.get('regeneration')?.rows[this.combatData.combatState ? 0 : 1];
       if(regen2DA){
         const regen_force = parseFloat(regen2DA.forceregen);
         if(!isNaN(regen_force)){
@@ -1621,14 +1621,14 @@ export class ModuleCreature extends ModuleObject {
     
     let attackAnimIndex = -1;
 
-    let modeltype = this.creatureAppearance.modeltype;
+    let modeltype = this.creatureAppearance?.modeltype ?? 'B';
     let attackKey = this.getCombatAnimationAttackType();
     let weaponWield = this.getCombatAnimationWeaponType();
     
     let anims = GameState.TwoDAManager.datatables.get('animations');
     if(anims){
       for(let i = 0; i < anims.RowCount; i++){
-        if(anims.rows[i].name == attackAnim){
+        if(anims.rows[i]?.name == attackAnim){
           attackAnimIndex = i;
           break;
         }
@@ -1674,20 +1674,18 @@ export class ModuleCreature extends ModuleObject {
 
     let attackAnimIndex = -1;
 
-    let modeltype = this.creatureAppearance.modeltype;
+    let modeltype = this.creatureAppearance?.modeltype ?? 'B';
     let attackKey = this.getCombatAnimationAttackType();
     let weaponWield = this.getCombatAnimationWeaponType();
     
     let anims = GameState.TwoDAManager.datatables.get('animations');
     if(anims){
       for(let i = 0; i < anims.RowCount; i++){
-        if(anims.rows[i].name == attackAnim){
+        if(anims.rows[i]?.name == attackAnim){
           attackAnimIndex = i;
           break;
         }
       }
-
-      //console.log('getDodgeAnimation', this.getName(), attackAnim, attackAnimIndex);
 
       let combatAnimation = GameState.TwoDAManager.datatables.get('combatanimations')?.getByID(attackAnimIndex);
       if(combatAnimation){
@@ -1737,20 +1735,18 @@ export class ModuleCreature extends ModuleObject {
 
     let attackAnimIndex = -1;
 
-    let modeltype = this.creatureAppearance.modeltype;
+    let modeltype = this.creatureAppearance?.modeltype ?? 'B';
     let attackKey = this.getCombatAnimationAttackType();
     let weaponWield = this.getCombatAnimationWeaponType();
     
     let anims = GameState.TwoDAManager.datatables.get('animations');
     if(anims){
       for(let i = 0; i < anims.RowCount; i++){
-        if(anims.rows[i].name == attackAnim){
+        if(anims.rows[i]?.name == attackAnim){
           attackAnimIndex = i;
           break;
         }
       }
-
-      //console.log('getParryAnimation', this.getName(), attackAnim, attackAnimIndex);
       let combatAnimation = GameState.TwoDAManager.datatables.get('combatanimations')?.getByID(attackAnimIndex);
       if(combatAnimation){
         let damageAnimIndex = combatAnimation['parry'+weaponWield];
@@ -2062,7 +2058,7 @@ export class ModuleCreature extends ModuleObject {
 
   getClosesetOpenSpot(oObject: ModuleObject){
     let maxDistance = Infinity;
-    let radius = this.creatureAppearance.hitdist;
+    let radius = this.creatureAppearance?.hitdist ?? 1;
     let closest = undefined;
     let distance = 0;
     let origin = this.position;
@@ -2921,22 +2917,24 @@ export class ModuleCreature extends ModuleObject {
 
   getRunSpeed(){
     if(this.getWalkRateId() == 7){
-      return this.creatureAppearance.rundist
+      return this.creatureAppearance?.rundist ?? 5.4;
     }
     const creaturespeed2DA = GameState.TwoDAManager.datatables.get('creaturespeed');
     if(creaturespeed2DA){
-      return parseFloat(creaturespeed2DA.rows[this.getWalkRateId()].runrate);
+      return parseFloat(creaturespeed2DA.rows[this.getWalkRateId()]?.runrate ?? '5.4');
     }
+    return 5.4;
   }
 
   getWalkSpeed(){
     if(this.getWalkRateId() == 7){
-      return this.creatureAppearance.walkdist
+      return this.creatureAppearance?.walkdist ?? 1.7;
     }
     const creaturespeed2DA = GameState.TwoDAManager.datatables.get('creaturespeed');
     if(creaturespeed2DA){
-      return parseFloat(creaturespeed2DA.rows[this.getWalkRateId()].walkrate);
+      return parseFloat(creaturespeed2DA.rows[this.getWalkRateId()]?.walkrate ?? '1.7');
     }
+    return 1.7;
   }
 
   getMovementSpeed(){
@@ -2944,7 +2942,7 @@ export class ModuleCreature extends ModuleObject {
   }
 
   getHitDistance(){
-    return this.creatureAppearance.hitdist;
+    return this.creatureAppearance?.hitdist ?? 1;
   }
 
   getMainClass(){
@@ -2995,7 +2993,7 @@ export class ModuleCreature extends ModuleObject {
       let expLevels = exptable2DA.rows;
 
       for(let i = 0; i < totalLevels; i++){
-        if(this.getXP() > parseInt(expLevels[i].level)){
+        if(expLevels[i] && this.getXP() > parseInt(expLevels[i].level)){
           level = i;
         }
       }
@@ -3298,7 +3296,7 @@ export class ModuleCreature extends ModuleObject {
   }
 
   getPersonalSpace(){
-    return this.creatureAppearance.perspace;
+    return this.creatureAppearance?.perspace ?? 0.35;
   }
 
   initEffects(): void {
