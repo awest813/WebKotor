@@ -21,7 +21,9 @@ export class GlobalVariableManager {
   };
   
   public static Init(){
-    let _initGlobals = TwoDAManager.datatables.get('globalcat').rows;
+    const globalcatTable = TwoDAManager.datatables.get('globalcat');
+    if(!globalcatTable) return;
+    let _initGlobals = globalcatTable.rows;
     for (let key in _initGlobals) {
       if (_initGlobals.hasOwnProperty(key)) {
         let globItem = _initGlobals[key];

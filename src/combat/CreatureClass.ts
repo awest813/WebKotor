@@ -86,7 +86,7 @@ export class CreatureClass {
     this.level = 0;
     this.spells = [];
     if(id >= 0)
-      this.apply2DA(GameState.TwoDAManager.datatables.get('classes').rows[this.id]);
+      this.apply2DA(GameState.TwoDAManager.datatables.get('classes')?.rows[this.id]);
   }
 
   getName(){

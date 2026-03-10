@@ -37,6 +37,8 @@ export class EffectForceShield extends GameEffect {
     if(this.applied)
       return;
 
+    if(!this.forceShield) return;
+
     super.onApply();
     
     let eVisualEffect = new GameState.GameEffectFactory.EffectVisualEffect();
