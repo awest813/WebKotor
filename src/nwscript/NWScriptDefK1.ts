@@ -6314,7 +6314,7 @@ NWScriptDefK1.Actions = {
     type: NWScriptDataType.EFFECT,
     args: [NWScriptDataType.INTEGER],
     action: function(this: NWScriptInstance, args: [number]){
-      let forceshield = GameState.TwoDAManager.datatables.get('forceshields').rows[args[0]];
+      let forceshield = GameState.TwoDAManager.datatables.get('forceshields')?.rows?.[args[0]];
       if(forceshield){
         let effect = new GameState.GameEffectFactory.EffectForceShield();
         effect.setCreator(this.caller);
@@ -9333,10 +9333,13 @@ NWScriptDefK1.Actions = {
     type: NWScriptDataType.VOID,
     args: [NWScriptDataType.STRING, NWScriptDataType.INTEGER],
     action: function(this: NWScriptInstance, args: [string, number]){
-      let count = GameState.TwoDAManager.datatables.get('plot').RowCount;
+      const plotTable = GameState.TwoDAManager.datatables.get('plot');
+      if(!plotTable) return;
+      const count = plotTable.RowCount;
       for(let i = 0; i < count; i++){
-        if(GameState.TwoDAManager.datatables.get('plot').rows[i].label.localeCompare(args[0], undefined, { sensitivity: 'base' }) === 0){
-          GameState.PartyManager.GiveXP( parseInt(GameState.TwoDAManager.datatables.get('plot').rows[i].xp) * (args[1] * 0.01) );
+        const row = plotTable.rows[i];
+        if(row?.label?.localeCompare(args[0], undefined, { sensitivity: 'base' }) === 0){
+          GameState.PartyManager.GiveXP( parseInt(row.xp) * (args[1] * 0.01) );
         }
       }
     }

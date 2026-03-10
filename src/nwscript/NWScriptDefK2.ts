@@ -5997,7 +5997,7 @@ NWScriptDefK2.Actions = {
     type: NWScriptDataType.INTEGER,
     args: [ NWScriptDataType.INTEGER ],
     action: function(this: NWScriptInstance, args: [number]){
-      const spell = GameState.TwoDAManager.datatables.get('spells').rows[args[0]];
+      const spell = GameState.TwoDAManager.datatables.get('spells')?.rows?.[args[0]];
       if(!spell){
         return 0;
       }

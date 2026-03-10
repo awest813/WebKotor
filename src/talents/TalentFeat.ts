@@ -123,8 +123,9 @@ export class TalentFeat extends TalentObject {
     this.objectType = TalentObjectType.TalentObject | TalentObjectType.TalentFeat;
 
     //Merge the feat properties from the feat.2da row with this feat
-    if(TwoDAManager.datatables.get('feat').rows[this.id]){
-      this.apply2DA(TwoDAManager.datatables.get('feat').rows[this.id]);
+    const featRow = TwoDAManager.datatables.get('feat')?.rows?.[this.id];
+    if(featRow){
+      this.apply2DA(featRow);
     }
 
   }
@@ -132,8 +133,9 @@ export class TalentFeat extends TalentObject {
   setId( value = 0 ){
     this.id = value;
     //Merge the feat properties from the feat.2da row with this feat
-    if(TwoDAManager.datatables.get('feat').rows[this.id]){
-      this.apply2DA(TwoDAManager.datatables.get('feat').rows[this.id]);
+    const featRow = TwoDAManager.datatables.get('feat')?.rows?.[this.id];
+    if(featRow){
+      this.apply2DA(featRow);
     }
   }
 

@@ -116,8 +116,9 @@ export class TalentSpell extends TalentObject {
   setId( value = 0 ){
     this.id = value;
     //Merge the spell properties from the spells.2da row with this spell
-    if(TwoDAManager.datatables.get('spells').rows[this.id]){
-      Object.assign(this, TwoDAManager.datatables.get('spells').rows[this.id]);
+    const spellRow = TwoDAManager.datatables.get('spells')?.rows?.[this.id];
+    if(spellRow){
+      Object.assign(this, spellRow);
     }
   }
 

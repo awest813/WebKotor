@@ -149,7 +149,7 @@ export class CutsceneManager {
 
     if(this.listener.isPM){
       GameState.PartyManager.MakePlayerLeader();
-      this.listener = this.dialog.listener = GameState.PartyManager.party[0];
+      this.listener = this.dialog.listener = GameState.PartyManager.party?.[0] ?? this.listener;
     }
 
     if(this.dialog.getConversationType() != DLGConversationType.COMPUTER){

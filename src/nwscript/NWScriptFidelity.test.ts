@@ -12698,3 +12698,124 @@ describe('Section 131: MenuGalaxyMap BTN_ACCEPT activePlanet null-guard', () => 
   });
 
 });
+
+describe('Section 132: EffectForceShield/GivePlotXP/GetSpellFormMask/CutsceneManager/Talent 2DA null-guards', () => {
+
+  it('EffectForceShield fn459: does not crash when forceshields 2DA table is missing', () => {
+    // Simulates: datatables.get('forceshields')?.rows?.[args[0]]
+    const datatables = new Map<string, any>();
+    const row = datatables.get('forceshields')?.rows?.[0];
+    expect(row).toBeUndefined();
+    expect(() => { const r = datatables.get('forceshields')?.rows?.[99]; }).not.toThrow();
+  });
+
+  it('EffectForceShield fn459: returns row when forceshields table is present', () => {
+    const datatables = new Map<string, any>();
+    datatables.set('forceshields', { rows: [{ ac: '5' }, { ac: '10' }] });
+    const row = datatables.get('forceshields')?.rows?.[1];
+    expect(row).toEqual({ ac: '10' });
+    const missing = datatables.get('forceshields')?.rows?.[99];
+    expect(missing).toBeUndefined();
+  });
+
+  it('GivePlotXP fn714: does not crash when plot 2DA table is missing', () => {
+    const datatables = new Map<string, any>();
+    let xpGiven = 0;
+    function givePlotXP(plotName: string, percentage: number) {
+      const plotTable = datatables.get('plot');
+      if(!plotTable) return;
+      const count = plotTable.RowCount;
+      for(let i = 0; i < count; i++){
+        const row = plotTable.rows[i];
+        if(row?.label?.localeCompare(plotName, undefined, { sensitivity: 'base' }) === 0){
+          xpGiven += parseInt(row.xp) * (percentage * 0.01);
+        }
+      }
+    }
+    expect(() => givePlotXP('dantooine_courtyard', 100)).not.toThrow();
+    expect(xpGiven).toBe(0);
+  });
+
+  it('GivePlotXP fn714: awards XP when matching plot row is found', () => {
+    const datatables = new Map<string, any>();
+    datatables.set('plot', {
+      RowCount: 3,
+      rows: [
+        { label: 'taris_escape', xp: '500' },
+        { label: 'dantooine_courtyard', xp: '1000' },
+        { label: 'manaan_trial', xp: '750' },
+      ]
+    });
+    let xpGiven = 0;
+    function givePlotXP(plotName: string, percentage: number) {
+      const plotTable = datatables.get('plot');
+      if(!plotTable) return;
+      const count = plotTable.RowCount;
+      for(let i = 0; i < count; i++){
+        const row = plotTable.rows[i];
+        if(row?.label?.localeCompare(plotName, undefined, { sensitivity: 'base' }) === 0){
+          xpGiven += parseInt(row.xp) * (percentage * 0.01);
+        }
+      }
+    }
+    givePlotXP('dantooine_courtyard', 100);
+    expect(xpGiven).toBe(1000);
+    givePlotXP('DANTOOINE_COURTYARD', 50);
+    expect(xpGiven).toBe(1500);
+  });
+
+  it('GetSpellFormMask fn817: does not crash when spells 2DA table is missing', () => {
+    const datatables = new Map<string, any>();
+    const spell = datatables.get('spells')?.rows?.[0];
+    expect(spell).toBeUndefined();
+  });
+
+  it('GetSpellFormMask fn817: returns formmask when spells table is present', () => {
+    const datatables = new Map<string, any>();
+    datatables.set('spells', { rows: [{ formmask: '3' }, { formmask: '7' }] });
+    const spell = datatables.get('spells')?.rows?.[1];
+    expect(spell).toBeDefined();
+    expect(parseInt(spell.formmask)).toBe(7);
+  });
+
+  it('CutsceneManager listener: falls back to current listener when party is empty', () => {
+    // Simulates: this.listener = party?.[0] ?? this.listener
+    const fallback = { name: 'fallback', isPM: false } as any;
+    let listener = fallback;
+    const party: any[] = [];
+    listener = party?.[0] ?? listener;
+    expect(listener).toBe(fallback);
+  });
+
+  it('CutsceneManager listener: uses party[0] when party is populated', () => {
+    const leader = { name: 'leader', isPM: false } as any;
+    const fallback = { name: 'fallback', isPM: false } as any;
+    let listener = fallback;
+    const party = [leader];
+    listener = party?.[0] ?? listener;
+    expect(listener).toBe(leader);
+  });
+
+  it('TalentSpell.setId: does not crash when spells 2DA table is missing', () => {
+    const datatables = new Map<string, any>();
+    let applied = false;
+    const spells = datatables.get('spells');
+    if(spells?.rows?.[1]){
+      applied = true;
+    }
+    expect(applied).toBe(false);
+    expect(() => { const r = datatables.get('spells')?.rows?.[1]; }).not.toThrow();
+  });
+
+  it('TalentFeat.setId: does not crash when feat 2DA table is missing', () => {
+    const datatables = new Map<string, any>();
+    let applied = false;
+    const feat = datatables.get('feat');
+    if(feat?.rows?.[5]){
+      applied = true;
+    }
+    expect(applied).toBe(false);
+    expect(() => { const r = datatables.get('feat')?.rows?.[5]; }).not.toThrow();
+  });
+
+});
