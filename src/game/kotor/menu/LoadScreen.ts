@@ -69,14 +69,17 @@ export class LoadScreen extends GameMenu {
   }
 
   showRandomHint() {
-    this.LBL_LOADING.setText(GameState.TLKManager.TLKStrings[42493].Value);
-    let id = Math.floor(Math.random() * (GameState.TwoDAManager.datatables.get('loadscreenhints').RowCount - 0 + 1)) + 0;
-    let hint = GameState.TwoDAManager.datatables.get('loadscreenhints').rows[id];
+    this.LBL_LOADING.setText(GameState.TLKManager.TLKStrings[42493]?.Value ?? '');
+    const hintsTable = GameState.TwoDAManager.datatables.get('loadscreenhints');
+    if(!hintsTable) return;
+    let id = Math.floor(Math.random() * hintsTable.RowCount);
+    let hint = hintsTable.rows[id];
     if (!hint) {
       console.log('showRandomHint', id);
-      hint = GameState.TwoDAManager.datatables.get('loadscreenhints').rows[0];
+      hint = hintsTable.rows[0];
     }
-    this.LBL_HINT.setText(GameState.TLKManager.TLKStrings[hint.gameplayhint].Value);
+    if(!hint) return;
+    this.LBL_HINT.setText(GameState.TLKManager.TLKStrings[hint.gameplayhint]?.Value ?? '');
   }
 
   showSavingMessage() {

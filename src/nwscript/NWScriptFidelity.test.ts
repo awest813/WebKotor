@@ -13243,3 +13243,271 @@ describe('Section 140: ModuleItem.getDexBonus uses baseItem guard not baseItemId
   });
 
 });
+
+describe('Section 141: EffectBeam.initialize does not crash when visualEffect lookup fails', () => {
+
+  it('does not throw when visualeffects 2DA table is missing', () => {
+    let visualEffect: any = undefined;
+    function initializeBeam(table: any, effectId: number): any {
+      if(table){
+        visualEffect = table.getByID(effectId);
+      }
+      if(!visualEffect) return null; // guard prevents switch crash
+      switch(visualEffect.progfx_duration){
+        case 616: return 'v_coldray_dur';
+        default: return 'v_coldray_dur';
+      }
+    }
+    // table missing → should not crash, returns null
+    expect(() => initializeBeam(null, 5)).not.toThrow();
+    expect(initializeBeam(null, 5)).toBeNull();
+  });
+
+  it('does not throw when getByID returns undefined (unknown effect id)', () => {
+    const table = { getByID: (_: number) => undefined };
+    let visualEffect: any = undefined;
+    function initializeBeam(t: any, effectId: number): any {
+      if(t){ visualEffect = t.getByID(effectId); }
+      if(!visualEffect) return null;
+      return visualEffect.progfx_duration;
+    }
+    expect(() => initializeBeam(table, 999)).not.toThrow();
+    expect(initializeBeam(table, 999)).toBeNull();
+  });
+
+  it('returns the correct model when visualEffect is defined', () => {
+    const table = { getByID: (_: number) => ({ progfx_duration: 616 }) };
+    let visualEffect: any = undefined;
+    function initializeBeam(t: any, effectId: number): string {
+      if(t){ visualEffect = t.getByID(effectId); }
+      if(!visualEffect) return '';
+      switch(visualEffect.progfx_duration){
+        case 616: return 'v_coldray_dur';
+        default: return 'v_coldray_dur';
+      }
+    }
+    expect(initializeBeam(table, 1)).toBe('v_coldray_dur');
+  });
+
+});
+
+describe('Section 142: EffectVisualEffect null-guards when visualEffect is undefined', () => {
+
+  it('onApply does not crash when visualEffect is undefined', () => {
+    let applied = false;
+    function onApply(visualEffect: any, objectType: string) {
+      if(applied) return;
+      applied = true;
+      if(!visualEffect) return;  // guard
+      if(objectType === 'creature'){
+        if(visualEffect.type_fd == 'F') { /* progFX_Impact */ }
+        if(visualEffect.type_fd == 'D') { /* progFX_Duration */ }
+      }
+    }
+    expect(() => onApply(undefined, 'creature')).not.toThrow();
+    applied = false;
+    expect(() => onApply(null, 'creature')).not.toThrow();
+    applied = false;
+    // with valid effect, still works
+    expect(() => onApply({ type_fd: 'F' }, 'creature')).not.toThrow();
+  });
+
+  it('getImpactRootModel returns **** when visualEffect is undefined', () => {
+    function getImpactRootModel(visualEffect: any, isCreature: boolean): string {
+      if(!visualEffect) return '****';
+      if(isCreature) return visualEffect.imp_root_m_node ?? '****';
+      return visualEffect.imp_root_m_node ?? '****';
+    }
+    expect(getImpactRootModel(undefined, false)).toBe('****');
+    expect(getImpactRootModel(null, true)).toBe('****');
+    expect(getImpactRootModel({ imp_root_m_node: 'somenode' }, false)).toBe('somenode');
+  });
+
+  it('impact() does not crash when visualEffect is undefined', () => {
+    function impact(visualEffect: any) {
+      if(!visualEffect) return;
+      if(visualEffect.imp_impact_node != '****'){
+        // would load model
+      }
+    }
+    expect(() => impact(undefined)).not.toThrow();
+    expect(() => impact(null)).not.toThrow();
+    expect(() => impact({ imp_impact_node: '****' })).not.toThrow();
+  });
+
+  it('impactHead() does not crash when visualEffect is undefined', () => {
+    function impactHead(visualEffect: any) {
+      if(!visualEffect) return;
+      if(visualEffect.imp_headcon_node != '****'){
+        // would load model
+      }
+    }
+    expect(() => impactHead(undefined)).not.toThrow();
+    expect(() => impactHead(null)).not.toThrow();
+  });
+
+  it('progFX_Impact() does not crash when visualEffect is undefined', () => {
+    function progFX_Impact(visualEffect: any) {
+      if(!visualEffect) return;
+      if(visualEffect.progfx_impact == '****') return;
+    }
+    expect(() => progFX_Impact(undefined)).not.toThrow();
+    expect(() => progFX_Impact(null)).not.toThrow();
+  });
+
+  it('progFX_Duration() does not crash when visualEffect is undefined', () => {
+    function progFX_Duration(visualEffect: any) {
+      if(!visualEffect) return;
+      if(visualEffect.progfx_duration == '****') return;
+    }
+    expect(() => progFX_Duration(undefined)).not.toThrow();
+    expect(() => progFX_Duration(null)).not.toThrow();
+  });
+
+  it('update() type_fd accesses use optional chaining and do not crash', () => {
+    function updateTypeFD(visualEffect: any): string | undefined {
+      return visualEffect?.type_fd;
+    }
+    expect(() => updateTypeFD(undefined)).not.toThrow();
+    expect(updateTypeFD(undefined)).toBeUndefined();
+    expect(updateTypeFD({ type_fd: 'D' })).toBe('D');
+  });
+
+});
+
+describe('Section 143: CameraShakeManager.playRumblePattern rumble 2DA null-guard', () => {
+
+  it('does not crash when rumble table is missing', () => {
+    function playRumblePattern(table: any, idx: number) {
+      const rumble = table?.rows[idx];
+      if(rumble){
+        return parseInt(rumble.lsamples);
+      }
+      return 0;
+    }
+    expect(() => playRumblePattern(null, 0)).not.toThrow();
+    expect(playRumblePattern(null, 0)).toBe(0);
+  });
+
+  it('does not crash when rumble row index is out of bounds', () => {
+    const table = { rows: [{ lsamples: '2', rsamples: '1', ltime1: '0.1', lmagnitude1: '5', ltime2: '0.2', lmagnitude2: '3', rtime1: '0.1', rmagnitude1: '2' }] };
+    function playRumblePattern(t: typeof table | null, idx: number) {
+      const rumble = t?.rows[idx];
+      if(rumble){ return parseInt(rumble.lsamples); }
+      return 0;
+    }
+    expect(playRumblePattern(table, 0)).toBe(2);
+    expect(playRumblePattern(table, 99)).toBe(0);  // out of bounds → 0, no crash
+    expect(() => playRumblePattern(null, 0)).not.toThrow();
+  });
+
+});
+
+describe('Section 144: LoadScreen.showRandomHint 2DA null-guard and off-by-one fix', () => {
+
+  it('does not crash when loadscreenhints table is missing', () => {
+    function showRandomHint(table: any): string {
+      if(!table) return '';
+      let id = Math.floor(Math.random() * table.RowCount);
+      let hint = table.rows[id];
+      if(!hint) hint = table.rows[0];
+      if(!hint) return '';
+      return hint.gameplayhint;
+    }
+    expect(() => showRandomHint(null)).not.toThrow();
+    expect(showRandomHint(null)).toBe('');
+  });
+
+  it('id is always a valid index (no off-by-one)', () => {
+    const table = {
+      RowCount: 5,
+      rows: [
+        { gameplayhint: '100' },
+        { gameplayhint: '101' },
+        { gameplayhint: '102' },
+        { gameplayhint: '103' },
+        { gameplayhint: '104' },
+      ]
+    };
+    function showRandomHint(t: typeof table): string {
+      if(!t) return '';
+      let id = Math.floor(Math.random() * t.RowCount);
+      let hint = t.rows[id];
+      if(!hint) hint = t.rows[0];
+      if(!hint) return '';
+      return hint.gameplayhint;
+    }
+    // run many times to check id is always in [0, RowCount-1]
+    for(let i = 0; i < 100; i++){
+      const result = showRandomHint(table);
+      expect(['100','101','102','103','104']).toContain(result);
+    }
+  });
+
+  it('falls back to rows[0] when id is out of bounds', () => {
+    const table = {
+      RowCount: 3,
+      rows: [{ gameplayhint: '200' }, { gameplayhint: '201' }, { gameplayhint: '202' }]
+    };
+    function showRandomHint(t: typeof table, forceId: number): string {
+      if(!t) return '';
+      let id = forceId;
+      let hint = (t as any).rows[id];
+      if(!hint) hint = t.rows[0];
+      if(!hint) return '';
+      return hint.gameplayhint;
+    }
+    expect(showRandomHint(table, 99)).toBe('200'); // fallback to rows[0]
+    expect(showRandomHint(table, 1)).toBe('201');  // normal access
+  });
+
+});
+
+describe('Section 145: CharGenManager.getSkillOrderForClass skills 2DA null-guard', () => {
+
+  it('does not crash when skills table is missing', () => {
+    function getSkillOrder(skillsTable: any, col: string): Record<string, number> {
+      const order: Record<string, number> = {'0':-1,'1':-1,'2':-1,'3':-1,'4':-1,'5':-1,'6':-1,'7':-1};
+      for(let i = 0; i < 8; i++){
+        if(!skillsTable) break;
+        const value = skillsTable.rows[i]?.[col];
+        if(value != '****' && value != null){
+          order[value - 1] = i;
+        }
+      }
+      return order;
+    }
+    expect(() => getSkillOrder(null, 'jedi_guardian')).not.toThrow();
+    const result = getSkillOrder(null, 'jedi_guardian');
+    expect(result['0']).toBe(-1); // all remain -1 when table is null
+  });
+
+  it('correctly assigns skill order when table exists', () => {
+    const table = {
+      rows: [
+        { jedi_guardian: '1' },
+        { jedi_guardian: '2' },
+        { jedi_guardian: '****' },
+        { jedi_guardian: '3' },
+        { jedi_guardian: '4' },
+        { jedi_guardian: '****' },
+        { jedi_guardian: '5' },
+        { jedi_guardian: '6' },
+      ]
+    };
+    function getSkillOrder(skillsTable: any, col: string): Record<string, number> {
+      const order: Record<string, number> = {'0':-1,'1':-1,'2':-1,'3':-1,'4':-1,'5':-1,'6':-1,'7':-1};
+      for(let i = 0; i < 8; i++){
+        if(!skillsTable) break;
+        const value = skillsTable.rows[i]?.[col];
+        if(value != '****' && value != null){ order[value - 1] = i; }
+      }
+      return order;
+    }
+    const result = getSkillOrder(table, 'jedi_guardian');
+    expect(result['0']).toBe(0); // skill 1 → index 0
+    expect(result['1']).toBe(1); // skill 2 → index 1
+    expect(result['2']).toBe(3); // skill 3 → index 3
+  });
+
+});

@@ -43,7 +43,7 @@ export class CameraShakeManager {
     CameraShakeManager.lsamples = [];
     CameraShakeManager.rsamples = [];
     CameraShakeManager.time = 0;
-    let rumble = TwoDAManager.datatables.get('rumble').rows[idx];
+    let rumble = TwoDAManager.datatables.get('rumble')?.rows[idx];
     if(rumble){
       let lsamples = parseInt(rumble.lsamples);
       let rsamples = parseInt(rumble.rsamples);

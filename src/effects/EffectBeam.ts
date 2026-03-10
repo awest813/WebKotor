@@ -45,6 +45,8 @@ export class EffectBeam extends GameEffect {
       this.visualEffect = visualeffects2DA.getByID(this.getInt(0));
     }
 
+    if(!this.visualEffect) return this;
+
     super.initialize();
 
     switch(this.visualEffect.progfx_duration){

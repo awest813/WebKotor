@@ -341,8 +341,10 @@ export class CharGenManager {
     };
     
     for (let i = 0; i < 8; i++) {
-      let value = TwoDAManager.datatables.get('skills').rows[i][this.getSkillTableColumnRecommended()];
-      if (value != '****') {
+      const skillsTable = TwoDAManager.datatables.get('skills');
+      if(!skillsTable) break;
+      let value = skillsTable.rows?.[i]?.[this.getSkillTableColumnRecommended()];
+      if (value != '****' && value != null) {
         skillOrder[value - 1] = i;
       }
     }

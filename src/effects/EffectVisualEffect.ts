@@ -61,9 +61,9 @@ export class EffectVisualEffect extends GameEffect {
     if(this.impact_model){
       if(this.impactTimer == undefined){
         this.impactTimer = 3000;
-        if(this.visualEffect.type_fd == 'D'){
+        if(this.visualEffect?.type_fd == 'D'){
           this.impact_model.playAnimation('duration', true);
-        }else if(this.visualEffect.type_fd == 'F'){
+        }else if(this.visualEffect?.type_fd == 'F'){
           this.impact_model.playAnimation('impact');
         }
       }
@@ -82,9 +82,9 @@ export class EffectVisualEffect extends GameEffect {
     if(this.impact_root_model){
       if(this.impactRootTimer == undefined){
         this.impactRootTimer = 3000;
-        if(this.visualEffect.type_fd == 'D'){
+        if(this.visualEffect?.type_fd == 'D'){
           this.impact_root_model.playAnimation('duration', true);
-        }else if(this.visualEffect.type_fd == 'F'){
+        }else if(this.visualEffect?.type_fd == 'F'){
           this.impact_root_model.playAnimation('impact');
         }
       }
@@ -103,9 +103,9 @@ export class EffectVisualEffect extends GameEffect {
     if(this.impact_head_model){
       if(this.impactHeadTimer == undefined){
         this.impactHeadTimer = 3000;
-        if(this.visualEffect.type_fd == 'D'){
+        if(this.visualEffect?.type_fd == 'D'){
           this.impact_head_model.playAnimation('duration', true);
-        }else if(this.visualEffect.type_fd == 'F'){
+        }else if(this.visualEffect?.type_fd == 'F'){
           this.impact_head_model.playAnimation('impact');
         }
       }
@@ -148,6 +148,8 @@ export class EffectVisualEffect extends GameEffect {
 
     super.onApply();
 
+    if(!this.visualEffect) return;
+
     if(BitWise.InstanceOf(this.object?.objectType, ModuleObjectType.ModuleCreature)){
 
       //FireAndForget
@@ -176,6 +178,7 @@ export class EffectVisualEffect extends GameEffect {
   }
 
   getImpactRootModel(){
+    if(!this.visualEffect) return '****';
     if(BitWise.InstanceOf(this.object?.objectType, ModuleObjectType.ModuleCreature)){
       const creature = this.object as ModuleCreature;
       switch(creature.getAppearance().sizecategory){
@@ -197,6 +200,7 @@ export class EffectVisualEffect extends GameEffect {
   }
 
   impact(){
+    if(!this.visualEffect) return;
     if(this.visualEffect.imp_impact_node != '****'){
       MDLLoader.loader.load(this.visualEffect.imp_impact_node)
       .then(
@@ -253,6 +257,7 @@ export class EffectVisualEffect extends GameEffect {
   }
 
   impactHead(){
+    if(!this.visualEffect) return;
     if(this.visualEffect.imp_headcon_node != '****'){
       MDLLoader.loader.load(this.visualEffect.imp_headcon_node).then(
         (mdl: OdysseyModel) => {
@@ -290,6 +295,8 @@ export class EffectVisualEffect extends GameEffect {
   }
 
   progFX_Impact(){
+
+    if(!this.visualEffect) return;
 
     if(this.visualEffect.progfx_impact == '****')
       return;
@@ -340,6 +347,8 @@ export class EffectVisualEffect extends GameEffect {
   }
 
   progFX_Duration(){
+
+    if(!this.visualEffect) return;
 
     if(this.visualEffect.progfx_duration == '****')
       return;
