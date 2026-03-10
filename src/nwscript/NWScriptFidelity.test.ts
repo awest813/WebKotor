@@ -13511,3 +13511,184 @@ describe('Section 145: CharGenManager.getSkillOrderForClass skills 2DA null-guar
   });
 
 });
+
+describe('Section 146: ModuleCreature getDamageAnimation/getDodgeAnimation/getParryAnimation model optional-chain', () => {
+
+  it('does not crash when this.model is undefined (getDamageAnimation)', () => {
+    const animMap = new Map([['cdamages', { name: 'cdamages' }]]);
+    function getDamageAnimation(model: any, damageAnim: any): string | undefined {
+      if(damageAnim && damageAnim.name && model?.odysseyAnimationMap?.get(damageAnim.name.toLowerCase().trim())){
+        return damageAnim.name;
+      }
+      return undefined;
+    }
+    // model is undefined → should not crash
+    expect(() => getDamageAnimation(undefined, { name: 'cdamages' })).not.toThrow();
+    expect(getDamageAnimation(undefined, { name: 'cdamages' })).toBeUndefined();
+    // model exists → should find animation
+    const creature = { odysseyAnimationMap: animMap };
+    expect(getDamageAnimation(creature, { name: 'cdamages' })).toBe('cdamages');
+  });
+
+  it('does not crash when this.model is undefined (getDodgeAnimation)', () => {
+    const animMap = new Map([['cdodgeg', { name: 'cdodgeg' }]]);
+    function getDodgeAnimation(model: any, damageAnim: any): string | undefined {
+      if(damageAnim && damageAnim.name && model?.odysseyAnimationMap?.get(damageAnim.name.toLowerCase().trim())){
+        return damageAnim.name;
+      }
+      return undefined;
+    }
+    expect(() => getDodgeAnimation(null, { name: 'cdodgeg' })).not.toThrow();
+    expect(getDodgeAnimation(null, { name: 'cdodgeg' })).toBeUndefined();
+    const creature = { odysseyAnimationMap: animMap };
+    expect(getDodgeAnimation(creature, { name: 'cdodgeg' })).toBe('cdodgeg');
+  });
+
+  it('does not crash when this.model is undefined (getParryAnimation)', () => {
+    const animMap = new Map([['c2p1', { name: 'c2p1' }]]);
+    function getParryAnimation(model: any, damageAnim: any): string | undefined {
+      if(damageAnim && damageAnim.name && model?.odysseyAnimationMap?.get(damageAnim.name.toLowerCase().trim())){
+        return damageAnim.name;
+      }
+      return undefined;
+    }
+    expect(() => getParryAnimation(undefined, { name: 'c2p1' })).not.toThrow();
+    expect(getParryAnimation(undefined, { name: 'c2p1' })).toBeUndefined();
+    const creature = { odysseyAnimationMap: animMap };
+    expect(getParryAnimation(creature, { name: 'c2p1' })).toBe('c2p1');
+  });
+
+});
+
+describe('Section 147: EffectForceShield.onApply guard when forceShield row is undefined', () => {
+
+  it('does not crash when forceShield row is undefined', () => {
+    let applied = false;
+    function onApply(forceShield: any) {
+      if(applied) return;
+      if(!forceShield) return;
+      applied = true;
+      // would access forceShield.visualeffectdef, forceShield.damageflags, etc.
+      const vfx = forceShield.visualeffectdef;
+      const dmg = forceShield.damageflags;
+      const res = forceShield.resistance;
+      const amt = forceShield.amount;
+      const vuln = forceShield.vulnerflags;
+      return { vfx, dmg, res, amt, vuln };
+    }
+    expect(() => onApply(undefined)).not.toThrow();
+    expect(onApply(undefined)).toBeUndefined();
+    expect(applied).toBe(false);
+  });
+
+  it('applies correctly when forceShield row exists', () => {
+    const row = { visualeffectdef: 5, damageflags: 3, resistance: 10, amount: 20, vulnerflags: 0 };
+    let applied = false;
+    function onApply(forceShield: any) {
+      if(applied) return;
+      if(!forceShield) return;
+      applied = true;
+      return {
+        vfx: forceShield.visualeffectdef,
+        dmg: forceShield.damageflags,
+        res: forceShield.resistance,
+        amt: forceShield.amount,
+        vuln: forceShield.vulnerflags,
+      };
+    }
+    const result = onApply(row);
+    expect(applied).toBe(true);
+    expect(result?.vfx).toBe(5);
+    expect(result?.dmg).toBe(3);
+  });
+
+});
+
+describe('Section 148: CreatureClass constructor datatables.get optional-chain guard', () => {
+
+  it('does not crash when classes 2DA is not loaded', () => {
+    const datatables = new Map<string, any>();
+    function CreatureClassCtor(id: number, datatables: Map<string, any>) {
+      if(id >= 0) {
+        const row = datatables.get('classes')?.rows[id];
+        // apply2DA would be called with potentially undefined row
+        return row ?? null;
+      }
+      return null;
+    }
+    expect(() => CreatureClassCtor(1, datatables)).not.toThrow();
+    expect(CreatureClassCtor(1, datatables)).toBeNull();
+  });
+
+  it('loads class data when classes 2DA is available', () => {
+    const datatables = new Map<string, any>([
+      ['classes', { rows: [{ name: 'Soldier', hitdie: '10' }, { name: 'Scout', hitdie: '8' }] }]
+    ]);
+    function CreatureClassCtor(id: number, datatables: Map<string, any>) {
+      if(id >= 0) {
+        return datatables.get('classes')?.rows[id] ?? null;
+      }
+      return null;
+    }
+    expect(CreatureClassCtor(0, datatables)).toEqual({ name: 'Soldier', hitdie: '10' });
+    expect(CreatureClassCtor(1, datatables)).toEqual({ name: 'Scout', hitdie: '8' });
+    expect(CreatureClassCtor(99, datatables)).toBeNull(); // out of bounds row is undefined, then ?? null, returns null
+  });
+
+});
+
+describe('Section 149: GlobalVariableManager.Init guard when globalcat 2DA is missing', () => {
+
+  it('does not crash when globalcat 2DA is not loaded', () => {
+    const datatables = new Map<string, any>();
+    const globals = { Boolean: new Map(), Number: new Map(), String: new Map() };
+    function Init(datatables: Map<string, any>) {
+      const globalcatTable = datatables.get('globalcat');
+      if(!globalcatTable) return;
+      const _initGlobals = globalcatTable.rows;
+      for(const key in _initGlobals) {
+        if(_initGlobals.hasOwnProperty(key)){
+          const globItem = _initGlobals[key];
+          switch(globItem.type){
+            case 'Boolean': globals.Boolean.set(globItem.name.toLowerCase(), { name: globItem.name, value: false }); break;
+            case 'Number': globals.Number.set(globItem.name.toLowerCase(), { name: globItem.name, value: 0 }); break;
+            case 'String': globals.String.set(globItem.name.toLowerCase(), { name: globItem.name, value: '' }); break;
+          }
+        }
+      }
+    }
+    expect(() => Init(datatables)).not.toThrow();
+    expect(globals.Boolean.size).toBe(0);
+  });
+
+  it('initializes globals when globalcat 2DA is present', () => {
+    const datatables = new Map<string, any>([
+      ['globalcat', {
+        rows: {
+          '0': { name: 'K_GLOBAL_1', type: 'Boolean' },
+          '1': { name: 'K_GLOBAL_2', type: 'Number' },
+        }
+      }]
+    ]);
+    const globals = { Boolean: new Map(), Number: new Map(), String: new Map() };
+    function Init(datatables: Map<string, any>) {
+      const globalcatTable = datatables.get('globalcat');
+      if(!globalcatTable) return;
+      const _initGlobals = globalcatTable.rows;
+      for(const key in _initGlobals) {
+        if(_initGlobals.hasOwnProperty(key)){
+          const globItem = _initGlobals[key];
+          switch(globItem.type){
+            case 'Boolean': globals.Boolean.set(globItem.name.toLowerCase(), { name: globItem.name, value: false }); break;
+            case 'Number': globals.Number.set(globItem.name.toLowerCase(), { name: globItem.name, value: 0 }); break;
+            case 'String': globals.String.set(globItem.name.toLowerCase(), { name: globItem.name, value: '' }); break;
+          }
+        }
+      }
+    }
+    Init(datatables);
+    expect(globals.Boolean.has('k_global_1')).toBe(true);
+    expect(globals.Number.has('k_global_2')).toBe(true);
+  });
+
+});

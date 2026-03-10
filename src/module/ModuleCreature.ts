@@ -1639,7 +1639,7 @@ export class ModuleCreature extends ModuleObject {
       if(combatAnimation){
         let damageAnimIndex = combatAnimation['damage'+weaponWield];
         let damageAnim = anims.getByID(damageAnimIndex);
-        if(damageAnim && damageAnim.name && this.model.odysseyAnimationMap.get(damageAnim.name.toLowerCase().trim())){
+        if(damageAnim && damageAnim.name && this.model?.odysseyAnimationMap?.get(damageAnim.name.toLowerCase().trim())){
           //console.log('damage anim', this.getName(), damageAnim.name)
           return OdysseyModelAnimation.GetAnimation2DA(damageAnim.name);
         }
@@ -1692,7 +1692,7 @@ export class ModuleCreature extends ModuleObject {
         if(combatAnimation.hits == 1 && [4, 2, 3].indexOf(weaponWield) >= 0){
           let damageAnimIndex = combatAnimation['parry'+weaponWield];
           let damageAnim = anims.getByID(damageAnimIndex);
-          if(damageAnim && damageAnim.name && this.model.odysseyAnimationMap.get(damageAnim.name.toLowerCase().trim())){
+          if(damageAnim && damageAnim.name && this.model?.odysseyAnimationMap?.get(damageAnim.name.toLowerCase().trim())){
             //console.log('dodge/parry anim', this.getName(), damageAnim.name)
             return damageAnim.name;
           }
@@ -1700,7 +1700,7 @@ export class ModuleCreature extends ModuleObject {
         
         let damageAnimIndex = combatAnimation['dodge'+weaponWield];
         let damageAnim = anims.getByID(damageAnimIndex);
-        if(damageAnim && damageAnim.name && this.model.odysseyAnimationMap.get(damageAnim.name.toLowerCase().trim())){
+        if(damageAnim && damageAnim.name && this.model?.odysseyAnimationMap?.get(damageAnim.name.toLowerCase().trim())){
           //console.log('dodge anim', this.getName(), damageAnim.name)
           return OdysseyModelAnimation.GetAnimation2DA(damageAnim.name);
         }
@@ -1751,7 +1751,7 @@ export class ModuleCreature extends ModuleObject {
       if(combatAnimation){
         let damageAnimIndex = combatAnimation['parry'+weaponWield];
         let damageAnim = anims.getByID(damageAnimIndex);
-        if(damageAnim && damageAnim.name && this.model.odysseyAnimationMap.get(damageAnim.name.toLowerCase().trim())){
+        if(damageAnim && damageAnim.name && this.model?.odysseyAnimationMap?.get(damageAnim.name.toLowerCase().trim())){
           //console.log('parry anim', this.getName(), damageAnim.name)
           return OdysseyModelAnimation.GetAnimation2DA(damageAnim.name);
         }
