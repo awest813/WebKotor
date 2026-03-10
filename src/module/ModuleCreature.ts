@@ -1602,7 +1602,7 @@ export class ModuleCreature extends ModuleObject {
       return; 
     }
     this.dialogAnimation = { 
-      animation: this.model.odysseyAnimationMap.get(data.name.toLowerCase().trim()),
+      animation: this.model.odysseyAnimationMap.get(data.name?.toLowerCase()?.trim() ?? ''),
       data: data,
       started: false,
     };
@@ -1626,21 +1626,23 @@ export class ModuleCreature extends ModuleObject {
     let weaponWield = this.getCombatAnimationWeaponType();
     
     let anims = GameState.TwoDAManager.datatables.get('animations');
-    for(let i = 0; i < anims.RowCount; i++){
-      if(anims.rows[i].name == attackAnim){
-        attackAnimIndex = i;
-        break;
+    if(anims){
+      for(let i = 0; i < anims.RowCount; i++){
+        if(anims.rows[i].name == attackAnim){
+          attackAnimIndex = i;
+          break;
+        }
       }
-    }
 
-    let combatAnimation = GameState.TwoDAManager.datatables.get('combatanimations').getByID(attackAnimIndex);
-    //console.log('getDamageAnimation', this.getName(), attackAnim, attackAnimIndex, combatAnimation, 'damage'+weaponWield);
-    if(combatAnimation){
-      let damageAnimIndex = combatAnimation['damage'+weaponWield];
-      let damageAnim = anims.getByID(damageAnimIndex);
-      if(damageAnim && this.model.odysseyAnimationMap.get(damageAnim.name.toLowerCase().trim())){
-        //console.log('damage anim', this.getName(), damageAnim.name)
-        return OdysseyModelAnimation.GetAnimation2DA(damageAnim.name);
+      let combatAnimation = GameState.TwoDAManager.datatables.get('combatanimations')?.getByID(attackAnimIndex);
+      //console.log('getDamageAnimation', this.getName(), attackAnim, attackAnimIndex, combatAnimation, 'damage'+weaponWield);
+      if(combatAnimation){
+        let damageAnimIndex = combatAnimation['damage'+weaponWield];
+        let damageAnim = anims.getByID(damageAnimIndex);
+        if(damageAnim && damageAnim.name && this.model.odysseyAnimationMap.get(damageAnim.name.toLowerCase().trim())){
+          //console.log('damage anim', this.getName(), damageAnim.name)
+          return OdysseyModelAnimation.GetAnimation2DA(damageAnim.name);
+        }
       }
     }
 
@@ -1677,31 +1679,33 @@ export class ModuleCreature extends ModuleObject {
     let weaponWield = this.getCombatAnimationWeaponType();
     
     let anims = GameState.TwoDAManager.datatables.get('animations');
-    for(let i = 0; i < anims.RowCount; i++){
-      if(anims.rows[i].name == attackAnim){
-        attackAnimIndex = i;
-        break;
-      }
-    }
-
-    //console.log('getDodgeAnimation', this.getName(), attackAnim, attackAnimIndex);
-
-    let combatAnimation = GameState.TwoDAManager.datatables.get('combatanimations').getByID(attackAnimIndex);
-    if(combatAnimation){
-      if(combatAnimation.hits == 1 && [4, 2, 3].indexOf(weaponWield) >= 0){
-        let damageAnimIndex = combatAnimation['parry'+weaponWield];
-        let damageAnim = anims.getByID(damageAnimIndex);
-        if(damageAnim && this.model.odysseyAnimationMap.get(damageAnim.name.toLowerCase().trim())){
-          //console.log('dodge/parry anim', this.getName(), damageAnim.name)
-          return damageAnim.name;
+    if(anims){
+      for(let i = 0; i < anims.RowCount; i++){
+        if(anims.rows[i].name == attackAnim){
+          attackAnimIndex = i;
+          break;
         }
       }
-      
-      let damageAnimIndex = combatAnimation['dodge'+weaponWield];
-      let damageAnim = anims.getByID(damageAnimIndex);
-      if(damageAnim && this.model.odysseyAnimationMap.get(damageAnim.name.toLowerCase().trim())){
-        //console.log('dodge anim', this.getName(), damageAnim.name)
-        return OdysseyModelAnimation.GetAnimation2DA(damageAnim.name);
+
+      //console.log('getDodgeAnimation', this.getName(), attackAnim, attackAnimIndex);
+
+      let combatAnimation = GameState.TwoDAManager.datatables.get('combatanimations')?.getByID(attackAnimIndex);
+      if(combatAnimation){
+        if(combatAnimation.hits == 1 && [4, 2, 3].indexOf(weaponWield) >= 0){
+          let damageAnimIndex = combatAnimation['parry'+weaponWield];
+          let damageAnim = anims.getByID(damageAnimIndex);
+          if(damageAnim && damageAnim.name && this.model.odysseyAnimationMap.get(damageAnim.name.toLowerCase().trim())){
+            //console.log('dodge/parry anim', this.getName(), damageAnim.name)
+            return damageAnim.name;
+          }
+        }
+        
+        let damageAnimIndex = combatAnimation['dodge'+weaponWield];
+        let damageAnim = anims.getByID(damageAnimIndex);
+        if(damageAnim && damageAnim.name && this.model.odysseyAnimationMap.get(damageAnim.name.toLowerCase().trim())){
+          //console.log('dodge anim', this.getName(), damageAnim.name)
+          return OdysseyModelAnimation.GetAnimation2DA(damageAnim.name);
+        }
       }
     }
 
@@ -1738,21 +1742,23 @@ export class ModuleCreature extends ModuleObject {
     let weaponWield = this.getCombatAnimationWeaponType();
     
     let anims = GameState.TwoDAManager.datatables.get('animations');
-    for(let i = 0; i < anims.RowCount; i++){
-      if(anims.rows[i].name == attackAnim){
-        attackAnimIndex = i;
-        break;
+    if(anims){
+      for(let i = 0; i < anims.RowCount; i++){
+        if(anims.rows[i].name == attackAnim){
+          attackAnimIndex = i;
+          break;
+        }
       }
-    }
 
-    //console.log('getParryAnimation', this.getName(), attackAnim, attackAnimIndex);
-    let combatAnimation = GameState.TwoDAManager.datatables.get('combatanimations').getByID(attackAnimIndex);
-    if(combatAnimation){
-      let damageAnimIndex = combatAnimation['parry'+weaponWield];
-      let damageAnim = anims.getByID(damageAnimIndex);
-      if(damageAnim && this.model.odysseyAnimationMap.get(damageAnim.name.toLowerCase().trim())){
-        //console.log('parry anim', this.getName(), damageAnim.name)
-        return OdysseyModelAnimation.GetAnimation2DA(damageAnim.name);
+      //console.log('getParryAnimation', this.getName(), attackAnim, attackAnimIndex);
+      let combatAnimation = GameState.TwoDAManager.datatables.get('combatanimations')?.getByID(attackAnimIndex);
+      if(combatAnimation){
+        let damageAnimIndex = combatAnimation['parry'+weaponWield];
+        let damageAnim = anims.getByID(damageAnimIndex);
+        if(damageAnim && damageAnim.name && this.model.odysseyAnimationMap.get(damageAnim.name.toLowerCase().trim())){
+          //console.log('parry anim', this.getName(), damageAnim.name)
+          return OdysseyModelAnimation.GetAnimation2DA(damageAnim.name);
+        }
       }
     }
 

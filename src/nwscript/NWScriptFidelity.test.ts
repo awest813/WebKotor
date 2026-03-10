@@ -12819,3 +12819,191 @@ describe('Section 132: EffectForceShield/GivePlotXP/GetSpellFormMask/CutsceneMan
   });
 
 });
+
+describe('Section 133: ModuleCreature.dialogPlayAnimation data.name optional-chain guard', () => {
+
+  it('does not crash when data.name is undefined (default {} param)', () => {
+    // Simulates: this.model.odysseyAnimationMap.get(data.name?.toLowerCase()?.trim() ?? '')
+    const map = new Map<string, any>();
+    map.set('talk_normal', { name: 'talk_normal' });
+    function dialogPlayAnimation(data: any = {}) {
+      return map.get(data.name?.toLowerCase()?.trim() ?? '');
+    }
+    expect(() => dialogPlayAnimation()).not.toThrow();
+    expect(dialogPlayAnimation()).toBeUndefined();
+  });
+
+  it('finds animation when data.name is defined', () => {
+    const map = new Map<string, any>();
+    map.set('talk_normal', { name: 'talk_normal' });
+    function dialogPlayAnimation(data: any = {}) {
+      return map.get(data.name?.toLowerCase()?.trim() ?? '');
+    }
+    expect(dialogPlayAnimation({ name: 'TALK_NORMAL' })).toEqual({ name: 'talk_normal' });
+  });
+
+  it('does not crash when data.name is null', () => {
+    const map = new Map<string, any>();
+    function dialogPlayAnimation(data: any = {}) {
+      return map.get(data.name?.toLowerCase()?.trim() ?? '');
+    }
+    expect(() => dialogPlayAnimation({ name: null })).not.toThrow();
+    expect(dialogPlayAnimation({ name: null })).toBeUndefined();
+  });
+
+});
+
+describe('Section 134: ModuleObject.dialogPlayAnimation anim.name optional-chain guard', () => {
+
+  it('does not crash when anim.name is undefined', () => {
+    // Simulates: odysseyAnimations.find(a => a.name.toLocaleLowerCase() == anim.name?.toLocaleLowerCase())
+    const odysseyAnimations = [{ name: 'listen' }, { name: 'talk_normal' }];
+    function findAnim(anim: any) {
+      return odysseyAnimations.find( (a) => a.name.toLocaleLowerCase() == anim.name?.toLocaleLowerCase() );
+    }
+    expect(() => findAnim({})).not.toThrow();
+    expect(findAnim({})).toBeUndefined();
+  });
+
+  it('finds animation when anim.name is defined', () => {
+    const odysseyAnimations = [{ name: 'listen' }, { name: 'talk_normal' }];
+    function findAnim(anim: any) {
+      return odysseyAnimations.find( (a) => a.name.toLocaleLowerCase() == anim.name?.toLocaleLowerCase() );
+    }
+    expect(findAnim({ name: 'LISTEN' })).toEqual({ name: 'listen' });
+    expect(findAnim({ name: 'talk_normal' })).toEqual({ name: 'talk_normal' });
+  });
+
+});
+
+describe('Section 135: getDamageAnimation/getDodgeAnimation/getParryAnimation 2DA null-guards', () => {
+
+  it('does not crash when animations 2DA table is missing', () => {
+    const datatables = new Map<string, any>();
+    let weaponWield = 1;
+    function getDamageAnimation(attackAnim: string): string {
+      let attackAnimIndex = -1;
+      const anims = datatables.get('animations');
+      if(anims){
+        for(let i = 0; i < anims.RowCount; i++){
+          if(anims.rows[i].name == attackAnim){ attackAnimIndex = i; break; }
+        }
+        const combatAnimation = datatables.get('combatanimations')?.getByID(attackAnimIndex);
+        if(combatAnimation){
+          const damageAnimIndex = combatAnimation['damage'+weaponWield];
+          const damageAnim = anims.getByID(damageAnimIndex);
+          if(damageAnim && damageAnim.name){ return damageAnim.name; }
+        }
+      }
+      return 'g' + weaponWield + 'd1';
+    }
+    expect(() => getDamageAnimation('c1a1')).not.toThrow();
+    expect(getDamageAnimation('c1a1')).toBe('g1d1');
+  });
+
+  it('does not crash when combatanimations 2DA table is missing but animations is present', () => {
+    const datatables = new Map<string, any>();
+    datatables.set('animations', {
+      RowCount: 2,
+      rows: [{ name: 'c1a1' }, { name: 'c1a2' }],
+      getByID: (id: number) => id >= 0 && id < 2 ? { name: 'c1d1' } : undefined,
+    });
+    let weaponWield = 1;
+    function getDamageAnimation(attackAnim: string): string {
+      let attackAnimIndex = -1;
+      const anims = datatables.get('animations');
+      if(anims){
+        for(let i = 0; i < anims.RowCount; i++){
+          if(anims.rows[i].name == attackAnim){ attackAnimIndex = i; break; }
+        }
+        const combatAnimation = datatables.get('combatanimations')?.getByID(attackAnimIndex);
+        if(combatAnimation){
+          const damageAnimIndex = combatAnimation['damage'+weaponWield];
+          const damageAnim = anims.getByID(damageAnimIndex);
+          if(damageAnim && damageAnim.name){ return damageAnim.name; }
+        }
+      }
+      return 'g' + weaponWield + 'd1';
+    }
+    expect(() => getDamageAnimation('c1a1')).not.toThrow();
+    // combatanimations is missing so falls through to default
+    expect(getDamageAnimation('c1a1')).toBe('g1d1');
+  });
+
+  it('returns combat animation when both 2DA tables are present', () => {
+    const datatables = new Map<string, any>();
+    datatables.set('animations', {
+      RowCount: 2,
+      rows: [{ name: 'c1a1' }, { name: 'c1d1' }],
+      getByID: (id: number) => id >= 0 && id < 2 ? datatables.get('animations').rows[id] : undefined,
+    });
+    datatables.set('combatanimations', {
+      getByID: (id: number) => id === 0 ? { damage1: 1 } : undefined,
+    });
+    let weaponWield = 1;
+    function getDamageAnimation(attackAnim: string): string {
+      let attackAnimIndex = -1;
+      const anims = datatables.get('animations');
+      if(anims){
+        for(let i = 0; i < anims.RowCount; i++){
+          if(anims.rows[i].name == attackAnim){ attackAnimIndex = i; break; }
+        }
+        const combatAnimation = datatables.get('combatanimations')?.getByID(attackAnimIndex);
+        if(combatAnimation){
+          const damageAnimIndex = combatAnimation['damage'+weaponWield];
+          const damageAnim = anims.getByID(damageAnimIndex);
+          if(damageAnim && damageAnim.name){ return damageAnim.name; }
+        }
+      }
+      return 'g' + weaponWield + 'd1';
+    }
+    expect(getDamageAnimation('c1a1')).toBe('c1d1');
+  });
+
+  it('does not crash in getDodgeAnimation when tables are missing', () => {
+    const datatables = new Map<string, any>();
+    let weaponWield = 1;
+    function getDodgeAnimation(attackAnim: string): string {
+      let attackAnimIndex = -1;
+      const anims = datatables.get('animations');
+      if(anims){
+        for(let i = 0; i < anims.RowCount; i++){
+          if(anims.rows[i].name == attackAnim){ attackAnimIndex = i; break; }
+        }
+        const combatAnimation = datatables.get('combatanimations')?.getByID(attackAnimIndex);
+        if(combatAnimation){
+          const dodgeAnimIndex = combatAnimation['dodge'+weaponWield];
+          const dodgeAnim = anims.getByID(dodgeAnimIndex);
+          if(dodgeAnim && dodgeAnim.name){ return dodgeAnim.name; }
+        }
+      }
+      return 'g' + weaponWield + 'g1';
+    }
+    expect(() => getDodgeAnimation('c1a1')).not.toThrow();
+    expect(getDodgeAnimation('c1a1')).toBe('g1g1');
+  });
+
+  it('does not crash in getParryAnimation when tables are missing', () => {
+    const datatables = new Map<string, any>();
+    let weaponWield = 1;
+    function getParryAnimation(attackAnim: string): string {
+      let attackAnimIndex = -1;
+      const anims = datatables.get('animations');
+      if(anims){
+        for(let i = 0; i < anims.RowCount; i++){
+          if(anims.rows[i].name == attackAnim){ attackAnimIndex = i; break; }
+        }
+        const combatAnimation = datatables.get('combatanimations')?.getByID(attackAnimIndex);
+        if(combatAnimation){
+          const parryAnimIndex = combatAnimation['parry'+weaponWield];
+          const parryAnim = anims.getByID(parryAnimIndex);
+          if(parryAnim && parryAnim.name){ return parryAnim.name; }
+        }
+      }
+      return 'g' + weaponWield + 'g1';
+    }
+    expect(() => getParryAnimation('c1a1')).not.toThrow();
+    expect(getParryAnimation('c1a1')).toBe('g1g1');
+  });
+
+});

@@ -3395,7 +3395,7 @@ export class ModuleObject {
       return; 
     }
 
-    const odysseyAnimation = this.model.odysseyAnimations.find( (a) => a.name.toLocaleLowerCase() == anim.name.toLocaleLowerCase() );
+    const odysseyAnimation = this.model.odysseyAnimations.find( (a) => a.name.toLocaleLowerCase() == anim.name?.toLocaleLowerCase() );
     if(!odysseyAnimation){
       return;
     }
