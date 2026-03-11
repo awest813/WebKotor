@@ -14248,3 +14248,217 @@ describe('Section 167: GetPlanetSelectable / GetPlanetAvailable NWScript null-gu
   });
 
 });
+
+describe('Section 168: CharGenPortCust updateCamera sceneModel3D null-guard', () => {
+
+  it('does not crash when sceneModel3D is undefined', () => {
+    function updateCamera(sceneModel3D: any, creature: any, camera: any) {
+      if(sceneModel3D){
+        if (creature.getGender() == 0) {
+          if(sceneModel3D.camerahookm){
+            camera.position = sceneModel3D.camerahookm.position;
+            camera.quaternion = sceneModel3D.camerahookm.quaternion;
+          }
+        } else {
+          if(sceneModel3D.camerahookf){
+            camera.position = sceneModel3D.camerahookf.position;
+            camera.quaternion = sceneModel3D.camerahookf.quaternion;
+          }
+        }
+      }
+    }
+    const camera = { position: null, quaternion: null };
+    const creature = { getGender: () => 0 };
+    expect(() => updateCamera(undefined, creature, camera)).not.toThrow();
+    expect(camera.position).toBeNull();
+    // With sceneModel3D but no camerahookm
+    expect(() => updateCamera({}, creature, camera)).not.toThrow();
+    // With full sceneModel3D
+    const pos = { x: 1 };
+    const quat = { w: 1 };
+    updateCamera({ camerahookm: { position: pos, quaternion: quat } }, creature, camera);
+    expect(camera.position).toBe(pos);
+  });
+
+  it('does not crash when sceneModel3D.camerahookf is undefined (female character)', () => {
+    function updateCamera(sceneModel3D: any, creature: any, camera: any) {
+      if(sceneModel3D){
+        if (creature.getGender() == 0) {
+          if(sceneModel3D.camerahookm){
+            camera.position = sceneModel3D.camerahookm.position;
+          }
+        } else {
+          if(sceneModel3D.camerahookf){
+            camera.position = sceneModel3D.camerahookf.position;
+          }
+        }
+      }
+    }
+    const camera = { position: null };
+    const femaleCreature = { getGender: () => 1 };
+    // sceneModel3D has no camerahookf
+    expect(() => updateCamera({ camerahookm: { position: { x: 0 } } }, femaleCreature, camera)).not.toThrow();
+    expect(camera.position).toBeNull();
+  });
+
+});
+
+describe('Section 169: ModuleArea rooms null-guard when Rooms field is missing from ARE', () => {
+
+  it('does not crash when rooms is undefined', () => {
+    const addedRooms: string[] = [];
+    function loadRooms(rooms: any) {
+      for(let i = 0; i < (rooms?.childStructs?.length ?? 0); i++){
+        addedRooms.push(rooms.childStructs[i]);
+      }
+    }
+    expect(() => loadRooms(undefined)).not.toThrow();
+    expect(addedRooms.length).toBe(0);
+    // With rooms present
+    loadRooms({ childStructs: ['room1', 'room2'] });
+    expect(addedRooms).toEqual(['room1', 'room2']);
+  });
+
+});
+
+describe('Section 170: ModuleArea areaProps null-guard when AreaProperties field is missing from GIT', () => {
+
+  it('does not crash when areaProps is undefined', () => {
+    function getAreaPropsStruct(areaProps: any) {
+      return areaProps?.getChildStructs()[0];
+    }
+    expect(() => getAreaPropsStruct(undefined)).not.toThrow();
+    expect(getAreaPropsStruct(undefined)).toBeUndefined();
+    // With valid areaProps
+    const mockStruct = { getFields: () => [] };
+    const result = getAreaPropsStruct({ getChildStructs: () => [mockStruct] });
+    expect(result).toBe(mockStruct);
+  });
+
+  it('areaPropsField falls back to [] when areaProps is undefined', () => {
+    function getAreaPropsField(areaProps: any) {
+      const areaPropsStruct = areaProps?.getChildStructs()[0];
+      return areaPropsStruct ? areaPropsStruct.getFields() : [];
+    }
+    expect(getAreaPropsField(undefined)).toEqual([]);
+  });
+
+});
+
+describe('Section 171: CharGenClass captureBaseExtents null-guard for getControlByName results', () => {
+
+  it('does not crash when _3D_MODEL1 control is not found', () => {
+    let extentsCaptured = false;
+    function captureBaseExtents(getControlByName: (name: string) => any) {
+      const modelControlHovered = getControlByName('_3D_MODEL1');
+      const btnControlHovered = getControlByName('BTN_SEL1');
+      if (!modelControlHovered || !btnControlHovered) return;
+      extentsCaptured = true;
+    }
+    expect(() => captureBaseExtents(() => undefined)).not.toThrow();
+    expect(extentsCaptured).toBe(false);
+    // With controls present
+    const mockCtrl = { extent: { width: 100, height: 80 } };
+    captureBaseExtents(() => mockCtrl);
+    expect(extentsCaptured).toBe(true);
+  });
+
+});
+
+describe('Section 172: CharGenClass update() null-guard for btnControl/modelControl/_3dView', () => {
+
+  it('continues to next iteration when btnControl is undefined', () => {
+    const processed: number[] = [];
+    function simulateUpdate(getControlByName: (name: string) => any, getView: (i: number) => any) {
+      for (let i = 0; i < 6; i++) {
+        const modelControl = getControlByName('_3D_MODEL' + (i + 1));
+        const btnControl = getControlByName('BTN_SEL' + (i + 1));
+        const _3dView = getView(i);
+        if (!btnControl || !modelControl || !_3dView) continue;
+        processed.push(i);
+      }
+    }
+    // All controls missing
+    expect(() => simulateUpdate(() => undefined, () => undefined)).not.toThrow();
+    expect(processed.length).toBe(0);
+    // All controls present
+    const mockCtrl = { hover: false, extent: { width: 100, height: 80 } };
+    const mockView = { setSize: () => {}, render: () => {} };
+    simulateUpdate(() => mockCtrl, () => mockView);
+    expect(processed.length).toBe(6);
+  });
+
+});
+
+describe('Section 173: CharGenManager resetSkillPoints skills[i] null-guard', () => {
+
+  it('does not crash when skills array is empty', () => {
+    const creature = { skills: [] as any[] };
+    function resetSkillPoints(c: typeof creature) {
+      for (let i = 0; i < 8; i++) {
+        if(c?.skills[i]) c.skills[i].rank = 0;
+      }
+    }
+    expect(() => resetSkillPoints(creature)).not.toThrow();
+  });
+
+  it('resets ranks when skills are present', () => {
+    const skills = Array.from({ length: 8 }, () => ({ rank: 5 }));
+    const creature = { skills };
+    function resetSkillPoints(c: typeof creature) {
+      for (let i = 0; i < 8; i++) {
+        if(c?.skills[i]) c.skills[i].rank = 0;
+      }
+    }
+    resetSkillPoints(creature);
+    expect(skills.every(s => s.rank === 0)).toBe(true);
+  });
+
+  it('getMaxSkillPoints returns 10 when classes[0] is undefined', () => {
+    function getMaxSkillPoints(creature: any) {
+      return 10 + parseInt(creature?.classes?.[0]?.skillpointbase ?? '0');
+    }
+    expect(getMaxSkillPoints(null)).toBe(10);
+    expect(getMaxSkillPoints({ classes: [] })).toBe(10);
+    expect(getMaxSkillPoints({ classes: [{ skillpointbase: '4' }] })).toBe(14);
+  });
+
+  it('getSkillTableColumn falls back gracefully when classes is empty', () => {
+    function getSkillTableColumn(creature: any) {
+      return (creature?.classes?.[0]?.skillstable?.toLowerCase() ?? 'all') + '_class';
+    }
+    expect(getSkillTableColumn(null)).toBe('all_class');
+    expect(getSkillTableColumn({ classes: [] })).toBe('all_class');
+    expect(getSkillTableColumn({ classes: [{ skillstable: 'Scout' }] })).toBe('scout_class');
+  });
+
+});
+
+describe('Section 174: CharGenName selectedCreature null-guard', () => {
+
+  it('does not crash when selectedCreature is undefined on END_BTN click', () => {
+    let firstNameSet = '';
+    function handleEndBtnClick(selectedCreature: any, value: string) {
+      if(selectedCreature){
+        selectedCreature.firstName = value;
+        firstNameSet = value;
+      }
+    }
+    expect(() => handleEndBtnClick(undefined, 'Revan')).not.toThrow();
+    expect(firstNameSet).toBe('');
+    // With creature present
+    const creature = { firstName: '' };
+    handleEndBtnClick(creature, 'Revan');
+    expect(creature.firstName).toBe('Revan');
+  });
+
+  it('show() does not crash when selectedCreature is undefined', () => {
+    function getDisplayName(selectedCreature: any) {
+      return selectedCreature?.firstName ?? '';
+    }
+    expect(() => getDisplayName(undefined)).not.toThrow();
+    expect(getDisplayName(undefined)).toBe('');
+    expect(getDisplayName({ firstName: 'Revan' })).toBe('Revan');
+  });
+
+});

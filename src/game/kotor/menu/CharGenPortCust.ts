@@ -255,12 +255,18 @@ export class CharGenPortCust extends GameMenu {
 
   updateCamera() {
     const creature = GameState.CharGenManager.selectedCreature;
-    if (creature.getGender() == 0) {
-      this._3dView.camera.position.copy(this.sceneModel3D.camerahookm.position);
-      this._3dView.camera.quaternion.copy(this.sceneModel3D.camerahookm.quaternion);
-    } else {
-      this._3dView.camera.position.copy(this.sceneModel3D.camerahookf.position);
-      this._3dView.camera.quaternion.copy(this.sceneModel3D.camerahookf.quaternion);
+    if(this.sceneModel3D){
+      if (creature.getGender() == 0) {
+        if(this.sceneModel3D.camerahookm){
+          this._3dView.camera.position.copy(this.sceneModel3D.camerahookm.position);
+          this._3dView.camera.quaternion.copy(this.sceneModel3D.camerahookm.quaternion);
+        }
+      } else {
+        if(this.sceneModel3D.camerahookf){
+          this._3dView.camera.position.copy(this.sceneModel3D.camerahookf.position);
+          this._3dView.camera.quaternion.copy(this.sceneModel3D.camerahookf.quaternion);
+        }
+      }
     }
     let v3 = new THREE.Vector3();
     if(creature.model?.camerahook){

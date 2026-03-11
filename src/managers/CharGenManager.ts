@@ -271,30 +271,31 @@ export class CharGenManager {
 
   static resetSkillPoints() {
     for (let i = 0; i < 8; i++) {
-      CharGenManager.selectedCreature.skills[i].rank = 0;
+      if(CharGenManager.selectedCreature?.skills[i])
+        CharGenManager.selectedCreature.skills[i].rank = 0;
     }
-    CharGenManager.computerUse = CharGenManager.selectedCreature.skills[0].rank;
-    CharGenManager.demolitions = CharGenManager.selectedCreature.skills[1].rank;
-    CharGenManager.stealth = CharGenManager.selectedCreature.skills[2].rank;
-    CharGenManager.awareness = CharGenManager.selectedCreature.skills[3].rank;
-    CharGenManager.persuade = CharGenManager.selectedCreature.skills[4].rank;
-    CharGenManager.repair = CharGenManager.selectedCreature.skills[5].rank;
-    CharGenManager.security = CharGenManager.selectedCreature.skills[6].rank;
-    CharGenManager.treatInjury = CharGenManager.selectedCreature.skills[7].rank;
+    CharGenManager.computerUse = CharGenManager.selectedCreature?.skills[0]?.rank ?? 0;
+    CharGenManager.demolitions = CharGenManager.selectedCreature?.skills[1]?.rank ?? 0;
+    CharGenManager.stealth = CharGenManager.selectedCreature?.skills[2]?.rank ?? 0;
+    CharGenManager.awareness = CharGenManager.selectedCreature?.skills[3]?.rank ?? 0;
+    CharGenManager.persuade = CharGenManager.selectedCreature?.skills[4]?.rank ?? 0;
+    CharGenManager.repair = CharGenManager.selectedCreature?.skills[5]?.rank ?? 0;
+    CharGenManager.security = CharGenManager.selectedCreature?.skills[6]?.rank ?? 0;
+    CharGenManager.treatInjury = CharGenManager.selectedCreature?.skills[7]?.rank ?? 0;
   }
 
   
 
   static getMaxSkillPoints() {
-    return 10 + parseInt(CharGenManager.selectedCreature.classes[0].skillpointbase as any);
+    return 10 + parseInt(CharGenManager.selectedCreature?.classes?.[0]?.skillpointbase as any ?? '0');
   }
 
   static getSkillTableColumn() {
-    return CharGenManager.selectedCreature.classes[0].skillstable.toLowerCase() + '_class';
+    return (CharGenManager.selectedCreature?.classes?.[0]?.skillstable?.toLowerCase() ?? 'all') + '_class';
   }
 
   static getSkillTableColumnRecommended() {
-    return CharGenManager.selectedCreature.classes[0].skillstable.toLowerCase() + '_reco';
+    return (CharGenManager.selectedCreature?.classes?.[0]?.skillstable?.toLowerCase() ?? 'all') + '_reco';
   }
 
   /**

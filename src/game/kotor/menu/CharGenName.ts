@@ -40,7 +40,9 @@ export class CharGenName extends GameMenu {
 
       this.END_BTN.addEventListener('click', (e) => {
         e.stopPropagation();
-        GameState.CharGenManager.selectedCreature.firstName = this.NAME_BOX_EDIT.getValue();
+        if(GameState.CharGenManager.selectedCreature){
+          GameState.CharGenManager.selectedCreature.firstName = this.NAME_BOX_EDIT.getValue();
+        }
         this.manager.CharGenQuickPanel.step2 = true;
         this.close();
       });
@@ -55,7 +57,7 @@ export class CharGenName extends GameMenu {
 
   show() {
     super.show();
-    this.NAME_BOX_EDIT.setText(GameState.CharGenManager.selectedCreature.firstName);
+    this.NAME_BOX_EDIT.setText(GameState.CharGenManager.selectedCreature?.firstName ?? '');
   }
   
 }

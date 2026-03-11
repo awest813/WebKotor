@@ -977,7 +977,7 @@ export class ModuleArea extends ModuleObject {
     this.playerVsPlayer = this.are.getFieldByLabel('PlayerVsPlayer').getValue();
 
     //Rooms
-    for(let i = 0; i < rooms.childStructs.length; i++ ){
+    for(let i = 0; i < (rooms?.childStructs?.length ?? 0); i++ ){
       let strt = rooms.childStructs[i];
       const roomName = this.are.getFieldByLabel('RoomName', strt.getFields()).getValue().toLowerCase();
       const envAudio = this.are.getFieldByLabel('EnvAudio', strt.getFields()).getValue();
@@ -1036,7 +1036,7 @@ export class ModuleArea extends ModuleObject {
     const triggers = this.git.getFieldByLabel('TriggerList');
     const waypoints = this.git.getFieldByLabel('WaypointList');
 
-    const areaPropsStruct = areaProps.getChildStructs()[0];
+    const areaPropsStruct = areaProps?.getChildStructs()[0];
     const areaPropsField = areaPropsStruct ? areaPropsStruct.getFields() : [];
     this.audio.ambient.day = this.git.getFieldByLabel('AmbientSndDay', areaPropsField).getValue();
     this.audio.ambient.dayVolume = this.git.getFieldByLabel('AmbientSndDayVol', areaPropsField).getValue();

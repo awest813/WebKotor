@@ -244,6 +244,7 @@ export class CharGenClass extends GameMenu {
     //They are sized differently from the other 5 controls
     const modelControlHovered = this.getControlByName('_3D_MODEL1');
     const btnControlHovered = this.getControlByName('BTN_SEL1');
+    if (!modelControlHovered || !btnControlHovered) return;
     this._hoverModelExtent.width = modelControlHovered.extent.width;
     this._hoverModelExtent.height = modelControlHovered.extent.height;
     this._hoverBtnExtent.width = btnControlHovered.extent.width;
@@ -273,6 +274,7 @@ export class CharGenClass extends GameMenu {
         if (creature) {
           creature.update(delta);
         }
+        if (!btnControl || !modelControl || !_3dView) continue;
         if (btnControl.hover) {
           if (GameState.CharGenManager.hoveredClass != i) {
             GameState.CharGenManager.hoveredClass = i;
