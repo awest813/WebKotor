@@ -29,6 +29,7 @@ export class Planetary {
     Planetary.selectedIndex = -1;
     const planetary2DA = GameState.TwoDAManager.datatables.get('planetary');
     Planetary.selected = undefined;
+    if(!planetary2DA) return;
     let planetList = planetary2DA.rows;
     for(let i = 0; i < planetary2DA.RowCount; i++){
       const planet = new Planet(planetList[i]);
@@ -53,11 +54,11 @@ export class Planetary {
   }
 
   static SetPlanetAvailable(index: number, bState: boolean){
-    Planetary.planets[index].enabled = bState;
+    if(Planetary.planets[index]) Planetary.planets[index].enabled = bState;
   }
 
   static SetPlanetSelectable(index: number, bState: boolean){
-    Planetary.planets[index].selectable = bState;
+    if(Planetary.planets[index]) Planetary.planets[index].selectable = bState;
   }
 
   static GetPlanetByGUITag(sTag = ''): Planet{

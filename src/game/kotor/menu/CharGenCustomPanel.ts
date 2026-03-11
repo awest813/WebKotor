@@ -83,7 +83,8 @@ export class CharGenCustomPanel extends GameMenu {
       this.BTN_STEPNAME6.addEventListener('click', (e) => {
         e.stopPropagation();
         GameState.CharGenManager.selectedCreature.equipment.ARMOR = undefined;
-        GameState.CharGenManager.selectedCreature.template.getFieldByLabel('Equip_ItemList').childStructs = [];
+        const equipListField = GameState.CharGenManager.selectedCreature.template.getFieldByLabel('Equip_ItemList');
+        if(equipListField) equipListField.childStructs = [];
         // Recalculate HP from class hitdie + CON modifier before saving the template
         GameState.CharGenManager.selectedCreature.recalculateMaxHP();
         GameState.GlobalVariableManager.Init();

@@ -159,8 +159,8 @@ export class CharGenPortCust extends K1_CharGenPortCust {
       const creature = GameState.CharGenManager.selectedCreature;
       
       //Save appearance choice
-      creature.template.getFieldByLabel('Appearance_Type').setValue(creature.appearance);
-      creature.template.getFieldByLabel('PortraitId').setValue(creature.portraitId);
+      creature.template.getFieldByLabel('Appearance_Type')?.setValue(creature.appearance);
+      creature.template.getFieldByLabel('PortraitId')?.setValue(creature.portraitId);
       this.manager.CharGenQuickPanel.step1 = true;
       this.close();
     });

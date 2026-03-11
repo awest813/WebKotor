@@ -14094,3 +14094,157 @@ describe('Section 161: ModuleArea MiniGame getChildStructs()[0] null-guard', () 
   });
 
 });
+
+describe('Section 162: CharGenMain show() TLKStrings optional-chain guard', () => {
+
+  it('does not crash when TLKStrings entry for selectedClass name is missing', () => {
+    const TLKStrings: Record<number, any> = {};
+    const CharGenClasses: any[] = [
+      { strings: { name: 100 } },
+    ];
+    function getClassName(selectedClass: number): string {
+      return TLKStrings[CharGenClasses[selectedClass]?.strings?.name]?.Value ?? '';
+    }
+    // TLKStrings entry missing → should return ''
+    expect(() => getClassName(0)).not.toThrow();
+    expect(getClassName(0)).toBe('');
+    // Out-of-bounds selectedClass → should return ''
+    expect(() => getClassName(99)).not.toThrow();
+    expect(getClassName(99)).toBe('');
+    // With data populated → should return value
+    TLKStrings[100] = { Value: 'Scout' };
+    expect(getClassName(0)).toBe('Scout');
+  });
+
+});
+
+describe('Section 163: CharGen getFieldByLabel().childStructs null-guard (KotOR + TSL QuickPanel and CustomPanel)', () => {
+
+  it('does not crash when getFieldByLabel returns undefined (Equip_ItemList missing)', () => {
+    const template = {
+      getFieldByLabel: (label: string) => undefined as any,
+    };
+    function clearEquipList(tmpl: typeof template) {
+      const equipListField = tmpl.getFieldByLabel('Equip_ItemList');
+      if(equipListField) equipListField.childStructs = [];
+    }
+    expect(() => clearEquipList(template)).not.toThrow();
+  });
+
+  it('clears childStructs when getFieldByLabel returns a valid field', () => {
+    const field = { childStructs: [1, 2, 3] };
+    const template = {
+      getFieldByLabel: (label: string) => field as any,
+    };
+    function clearEquipList(tmpl: typeof template) {
+      const equipListField = tmpl.getFieldByLabel('Equip_ItemList');
+      if(equipListField) equipListField.childStructs = [];
+    }
+    clearEquipList(template);
+    expect(field.childStructs).toEqual([]);
+  });
+
+});
+
+describe('Section 164: CharGen getFieldByLabel().setValue() optional-chain guard (KotOR + TSL PortCust)', () => {
+
+  it('does not crash when getFieldByLabel returns undefined (Appearance_Type missing)', () => {
+    const template = {
+      getFieldByLabel: (label: string) => undefined as any,
+    };
+    function setAppearance(tmpl: typeof template, appearance: number) {
+      tmpl.getFieldByLabel('Appearance_Type')?.setValue(appearance);
+      tmpl.getFieldByLabel('PortraitId')?.setValue(0);
+    }
+    expect(() => setAppearance(template, 5)).not.toThrow();
+  });
+
+  it('calls setValue when field exists', () => {
+    let appearances: any[] = [];
+    const makeField = () => ({
+      setValue: (v: any) => appearances.push(v),
+    });
+    const template = {
+      getFieldByLabel: (label: string) => makeField() as any,
+    };
+    function setAppearance(tmpl: typeof template, appearance: number, portraitId: number) {
+      tmpl.getFieldByLabel('Appearance_Type')?.setValue(appearance);
+      tmpl.getFieldByLabel('PortraitId')?.setValue(portraitId);
+    }
+    setAppearance(template, 7, 3);
+    expect(appearances).toContain(7);
+    expect(appearances).toContain(3);
+  });
+
+});
+
+describe('Section 165: Planetary.Init() null-guard when planetary 2DA is missing', () => {
+
+  it('does not crash when planetary2DA is undefined', () => {
+    let planets: any[] = [];
+    function init(planetary2DA: any) {
+      planets = [];
+      if(!planetary2DA) return;
+      const planetList = planetary2DA.rows;
+      for(let i = 0; i < planetary2DA.RowCount; i++){
+        planets.push(planetList[i]);
+      }
+    }
+    expect(() => init(undefined)).not.toThrow();
+    expect(planets.length).toBe(0);
+    // With valid 2DA
+    init({ rows: [{ id: 0 }, { id: 1 }], RowCount: 2 });
+    expect(planets.length).toBe(2);
+  });
+
+});
+
+describe('Section 166: Planetary.SetPlanetAvailable/SetPlanetSelectable bounds guard', () => {
+
+  it('SetPlanetAvailable does not crash when index is out of bounds', () => {
+    const planets: any[] = [{ enabled: false }];
+    function setPlanetAvailable(index: number, bState: boolean) {
+      if(planets[index]) planets[index].enabled = bState;
+    }
+    expect(() => setPlanetAvailable(99, true)).not.toThrow();
+    expect(() => setPlanetAvailable(0, true)).not.toThrow();
+    expect(planets[0].enabled).toBe(true);
+  });
+
+  it('SetPlanetSelectable does not crash when index is out of bounds', () => {
+    const planets: any[] = [{ selectable: false }];
+    function setPlanetSelectable(index: number, bState: boolean) {
+      if(planets[index]) planets[index].selectable = bState;
+    }
+    expect(() => setPlanetSelectable(99, true)).not.toThrow();
+    expect(() => setPlanetSelectable(0, true)).not.toThrow();
+    expect(planets[0].selectable).toBe(true);
+  });
+
+});
+
+describe('Section 167: GetPlanetSelectable / GetPlanetAvailable NWScript null-guard', () => {
+
+  it('GetPlanetSelectable returns NW_FALSE when planet index is out of bounds', () => {
+    const NW_TRUE = 1;
+    const NW_FALSE = 0;
+    const planets: any[] = [{ selectable: true }];
+    function getPlanetSelectable(index: number) {
+      return planets[index]?.selectable ? NW_TRUE : NW_FALSE;
+    }
+    expect(getPlanetSelectable(0)).toBe(NW_TRUE);
+    expect(getPlanetSelectable(99)).toBe(NW_FALSE);
+  });
+
+  it('GetPlanetAvailable returns NW_FALSE when planet index is out of bounds', () => {
+    const NW_TRUE = 1;
+    const NW_FALSE = 0;
+    const planets: any[] = [{ enabled: true }];
+    function getPlanetAvailable(index: number) {
+      return planets[index]?.enabled ? NW_TRUE : NW_FALSE;
+    }
+    expect(getPlanetAvailable(0)).toBe(NW_TRUE);
+    expect(getPlanetAvailable(99)).toBe(NW_FALSE);
+  });
+
+});

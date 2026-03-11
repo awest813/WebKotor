@@ -147,7 +147,7 @@ export class CharGenMain extends GameMenu {
     }
     this.LBL_NAME.setText(GameState.CharGenManager.selectedCreature.firstName);
     this.LBL_CLASS.setText(
-      GameState.TLKManager.TLKStrings[CharGenClasses[GameState.CharGenManager.selectedClass].strings.name].Value
+      GameState.TLKManager.TLKStrings[CharGenClasses[GameState.CharGenManager.selectedClass]?.strings?.name]?.Value ?? ''
     )
   }
 
