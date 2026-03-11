@@ -13941,3 +13941,156 @@ describe('Section 156: CharGenSkills BTN_ACCEPT selectedCreature.skills null-gua
   });
 
 });
+
+describe('Section 157: CharGenFeats buildFeatList groups.push inside if-block guard', () => {
+
+  it('does not crash when sorting groups that include feats with prerequisites (empty groups)', () => {
+    // Simulates the bug where groups.push(group) was outside the if(!prereqfeat1 && !prereqfeat2) block,
+    // causing empty [] entries that crash groupa[0].toolsCategories in the sort comparator.
+    const feats = [
+      { constant: 'FEAT_A', prereqFeat1: -1, prereqFeat2: -1, toolsCategories: 2 },
+      { constant: 'FEAT_B', prereqFeat1: 0, prereqFeat2: -1, toolsCategories: 1 }, // has prereq
+      { constant: 'FEAT_C', prereqFeat1: -1, prereqFeat2: -1, toolsCategories: 3 },
+    ];
+    const groups: any[] = [];
+    for (let i = 0; i < feats.length; i++) {
+      const feat = feats[i];
+      const group: any[] = [];
+      const prereqfeat1 = feat.prereqFeat1 >= 0 ? feats[feat.prereqFeat1] : undefined;
+      const prereqfeat2 = feat.prereqFeat2 >= 0 ? feats[feat.prereqFeat2] : undefined;
+      if (!prereqfeat1 && !prereqfeat2) {
+        group.push(feat);
+        groups.push(group); // correctly inside the if block
+      }
+      // BUG WAS: groups.push(group) here (outside) would push empty groups
+    }
+    expect(() => groups.sort((a, b) => a[0].toolsCategories > b[0].toolsCategories ? 1 : -1)).not.toThrow();
+    expect(groups.length).toBe(2); // only non-empty groups
+    expect(groups[0][0].toolsCategories).toBeLessThanOrEqual(groups[1][0].toolsCategories);
+  });
+
+  it('crashed with the old pattern (empty groups pushed outside if block)', () => {
+    const feats = [
+      { constant: 'FEAT_A', prereqFeat1: -1, prereqFeat2: -1, toolsCategories: 2 },
+      { constant: 'FEAT_B', prereqFeat1: 0, prereqFeat2: -1, toolsCategories: 1 },
+    ];
+    const badGroups: any[] = [];
+    for (let i = 0; i < feats.length; i++) {
+      const feat = feats[i];
+      const group: any[] = [];
+      const prereqfeat1 = feat.prereqFeat1 >= 0 ? feats[feat.prereqFeat1] : undefined;
+      const prereqfeat2 = feat.prereqFeat2 >= 0 ? feats[feat.prereqFeat2] : undefined;
+      if (!prereqfeat1 && !prereqfeat2) {
+        group.push(feat);
+      }
+      badGroups.push(group); // BUG: outside if block - includes empty arrays
+    }
+    // badGroups[1] is [] - accessing [1][0].toolsCategories throws
+    expect(() => badGroups.sort((a, b) => a[0].toolsCategories > b[0].toolsCategories ? 1 : -1)).toThrow();
+  });
+
+});
+
+describe('Section 158: CharGenQuickOrCustom saving_throw_data datatables.get null-guard', () => {
+
+  it('does not crash when saving throw table is missing from datatables', () => {
+    const datatables = new Map<string, any>();
+    // table exists with row
+    datatables.set('classguard_saving_throws', { rows: [{ fortsave: '2', willsave: '2', refsave: '2' }] });
+    let creature = { fortbonus: 0, willbonus: 0, refbonus: 0 };
+    function applyThrows(label: string) {
+      const table = datatables.get(label);
+      const row = table?.rows[0];
+      creature.fortbonus = parseInt(row?.fortsave ?? '0');
+      creature.willbonus = parseInt(row?.willsave ?? '0');
+      creature.refbonus = parseInt(row?.refsave ?? '0');
+    }
+    expect(() => applyThrows('missing_table')).not.toThrow();
+    expect(creature.fortbonus).toBe(0);
+    applyThrows('classguard_saving_throws');
+    expect(creature.fortbonus).toBe(2);
+    expect(creature.willbonus).toBe(2);
+    expect(creature.refbonus).toBe(2);
+  });
+
+});
+
+describe('Section 159: CharGenClass TLKStrings optional-chain guard', () => {
+
+  it('does not crash when TLKStrings entry for hoveredClass is missing', () => {
+    const TLKStrings: Record<number, any> = {};
+    const CharGenClasses: any[] = [
+      { strings: { description: 100, gender: 101, name: 102 } },
+    ];
+    let descText = '';
+    let classText = '';
+    function updateText(hoveredClass: number) {
+      descText = TLKStrings[CharGenClasses[hoveredClass]?.strings?.description]?.Value ?? '';
+      classText = (TLKStrings[CharGenClasses[hoveredClass]?.strings?.gender]?.Value ?? '') + ' ' +
+                  (TLKStrings[CharGenClasses[hoveredClass]?.strings?.name]?.Value ?? '');
+    }
+    expect(() => updateText(0)).not.toThrow();
+    expect(descText).toBe('');
+    expect(classText.trim()).toBe('');
+    // With data populated
+    TLKStrings[100] = { Value: 'A brave warrior' };
+    TLKStrings[101] = { Value: 'Male' };
+    TLKStrings[102] = { Value: 'Soldier' };
+    updateText(0);
+    expect(descText).toBe('A brave warrior');
+    expect(classText).toBe('Male Soldier');
+    // Out-of-bounds hoveredClass
+    expect(() => updateText(99)).not.toThrow();
+  });
+
+});
+
+describe('Section 160: SaveGame globalVars stringValues[i] bounds guard', () => {
+
+  it('does not crash when stringValues has fewer entries than catStrings', () => {
+    const stringValues: any[] = [
+      { getFieldByLabel: (n: string) => ({ getValue: () => 'hello' }) },
+      // index 1 is missing
+    ];
+    const catStrings = [
+      { getFieldByLabel: (n: string) => ({ getValue: () => 'greeting' }) },
+      { getFieldByLabel: (n: string) => ({ getValue: () => 'farewell' }) },
+    ];
+    const globals = new Map<string, { value: string }>();
+    function loadStrings() {
+      for (let i = 0; i < catStrings.length; i++) {
+        const strCat = catStrings[i];
+        if (strCat) {
+          const strLabel = strCat.getFieldByLabel('Name').getValue();
+          const strValue = stringValues[i]?.getFieldByLabel('String')?.getValue() ?? '';
+          globals.set(strLabel.toLowerCase(), { value: strValue });
+        }
+      }
+    }
+    expect(() => loadStrings()).not.toThrow();
+    expect(globals.get('greeting')?.value).toBe('hello');
+    expect(globals.get('farewell')?.value).toBe(''); // missing entry defaults to ''
+  });
+
+});
+
+describe('Section 161: ModuleArea MiniGame getChildStructs()[0] null-guard', () => {
+
+  it('does not create ModuleMiniGame when getChildStructs returns empty array', () => {
+    let miniGame: any = undefined;
+    function loadMiniGame(hasField: boolean, structs: any[]) {
+      if (hasField) {
+        const mgStruct = structs[0];
+        if (mgStruct) miniGame = { loaded: true, struct: mgStruct };
+      }
+    }
+    // field exists but no child structs
+    expect(() => loadMiniGame(true, [])).not.toThrow();
+    expect(miniGame).toBeUndefined();
+    // field exists with a valid struct
+    loadMiniGame(true, [{ type: 0 }]);
+    expect(miniGame).toBeDefined();
+    expect(miniGame.loaded).toBe(true);
+  });
+
+});

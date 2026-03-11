@@ -35,7 +35,8 @@ export class CharGenQuickOrCustom extends K1_CharGenQuickOrCustom {
         try{
           const creatureClass = GameState.SWRuleSet.classes[GameState.CharGenManager.selectedClass];
           const saving_throw_label = creatureClass['savingthrowtable'].toLowerCase();
-          const saving_throw_data = GameState.TwoDAManager.datatables.get(saving_throw_label).rows[0];
+          const saving_throw_table = GameState.TwoDAManager.datatables.get(saving_throw_label);
+          const saving_throw_data = saving_throw_table?.rows[0];
           const feats_table = GameState.SWRuleSet.feats;
 
           GameState.CharGenManager.selectedCreature.str = creatureClass.str;
@@ -46,9 +47,9 @@ export class CharGenQuickOrCustom extends K1_CharGenQuickOrCustom {
           GameState.CharGenManager.selectedCreature.cha = creatureClass.cha;
           GameState.CharGenManager.selectedCreature.str = creatureClass.str;
 
-          GameState.CharGenManager.selectedCreature.fortbonus = parseInt(saving_throw_data.fortsave);
-          GameState.CharGenManager.selectedCreature.willbonus = parseInt(saving_throw_data.willsave);
-          GameState.CharGenManager.selectedCreature.refbonus = parseInt(saving_throw_data.refsave);
+          GameState.CharGenManager.selectedCreature.fortbonus = parseInt(saving_throw_data?.fortsave ?? '0');
+          GameState.CharGenManager.selectedCreature.willbonus = parseInt(saving_throw_data?.willsave ?? '0');
+          GameState.CharGenManager.selectedCreature.refbonus = parseInt(saving_throw_data?.refsave ?? '0');
 
           for(let i = 0, len = feats_table.length; i < len; i++){
             const feat_data = feats_table[i];

@@ -505,7 +505,7 @@ export class SaveGame {
       let strCat = catStrings[i];
       if(strCat){
         let strLabel = strCat.getFieldByLabel('Name').getValue();
-        let strValue = stringValues[i].getFieldByLabel('String').getValue();
+        let strValue = stringValues[i]?.getFieldByLabel('String')?.getValue() ?? '';
         if(GameState.GlobalVariableManager.Globals.String.has(strLabel.toLowerCase())){
           GameState.GlobalVariableManager.Globals.String.get(strLabel.toLowerCase()).value = strValue;
         }else{

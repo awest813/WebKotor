@@ -158,8 +158,8 @@ export class CharGenFeats extends GameMenu {
           }
         }
         this.LB_FEATS.addItem(group);
+        groups.push(group);
       }
-      groups.push(group);
     }
     groups.sort((groupa, groupb) => groupa[0].toolsCategories > groupb[0].toolsCategories ? 1 : -1);
     console.log(groups);

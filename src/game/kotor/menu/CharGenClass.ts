@@ -303,8 +303,9 @@ export class CharGenClass extends GameMenu {
         modelControl.resizeControl();
       }
       if (this.textNeedsUpdate) {
-        this.LBL_DESC.setText(GameState.TLKManager.TLKStrings[CharGenClasses[GameState.CharGenManager.hoveredClass].strings.description].Value);
-        this.LBL_CLASS.setText(GameState.TLKManager.TLKStrings[CharGenClasses[GameState.CharGenManager.hoveredClass].strings.gender].Value + ' ' + GameState.TLKManager.TLKStrings[CharGenClasses[GameState.CharGenManager.hoveredClass].strings.name].Value);
+        const strings = CharGenClasses[GameState.CharGenManager.hoveredClass]?.strings;
+        this.LBL_DESC.setText(GameState.TLKManager.TLKStrings[strings?.description]?.Value ?? '');
+        this.LBL_CLASS.setText((GameState.TLKManager.TLKStrings[strings?.gender]?.Value ?? '') + ' ' + (GameState.TLKManager.TLKStrings[strings?.name]?.Value ?? ''));
         this.textNeedsUpdate = false;
       }
     } catch (e: any) {

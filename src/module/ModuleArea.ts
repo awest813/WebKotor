@@ -939,9 +939,8 @@ export class ModuleArea extends ModuleObject {
     }
 
     if(this.are.RootNode.hasField('MiniGame')){
-      this.miniGame = new ModuleMiniGame(
-        this.are.getFieldByLabel('MiniGame').getChildStructs()[0]
-      );
+      const mgStruct = this.are.getFieldByLabel('MiniGame')?.getChildStructs()[0];
+      if(mgStruct) this.miniGame = new ModuleMiniGame(mgStruct);
     }
 
     this.modListenCheck = this.are.getFieldByLabel('ModListenCheck').getValue();
