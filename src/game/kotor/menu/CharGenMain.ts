@@ -109,10 +109,15 @@ export class CharGenMain extends GameMenu {
     if (!this.bVisible)
       return;
     try {
-      let modelControl = this.MODEL_LBL;
-      GameState.CharGenManager.selectedCreature.update(delta);
-      this._3dView.render(delta);
-      (modelControl.getFill().material as THREE.ShaderMaterial).needsUpdate = true;
+      const modelControl = this.MODEL_LBL;
+      const selectedCreature = GameState.CharGenManager.selectedCreature;
+      selectedCreature?.update(delta);
+      if(this._3dView){
+        this._3dView.render(delta);
+      }
+      if(modelControl){
+        (modelControl.getFill().material as THREE.ShaderMaterial).needsUpdate = true;
+      }
     } catch (e: any) {
       console.error(e);
     }
@@ -128,24 +133,36 @@ export class CharGenMain extends GameMenu {
     this.LBL_LEVEL_VAL?.hide();
     this.OLD_LBL?.hide();
     this.NEW_LBL?.hide();
+    const selectedCreature = GameState.CharGenManager.selectedCreature;
+    if(!selectedCreature){
+      this.PORTRAIT_LBL?.hide();
+      this.LBL_NAME?.setText('');
+      this.LBL_CLASS?.setText('');
+      return;
+    }
+
     try {
-      GameState.CharGenManager.selectedCreature.model.parent.remove(GameState.CharGenManager.selectedCreature.model);
+      selectedCreature.model?.parent?.remove(selectedCreature.model);
     } catch (e: any) {
     }
-    const creatureModel = GameState.CharGenManager.selectedCreature.model;
+    const creatureModel = selectedCreature.model;
     if(creatureModel){
       this._3dView.scene.add(creatureModel);
       creatureModel.rotation.z = -Math.PI / 2;
     }
-    const portraitResRef = GameState.CharGenManager.selectedCreature.getPortraitResRef();
-    this.PORTRAIT_LBL.show();
-    if (this.PORTRAIT_LBL.getFillTextureName() != portraitResRef) {
-      this.PORTRAIT_LBL.setFillTextureName(portraitResRef);
-      TextureLoader.tpcLoader.fetch(portraitResRef).then((texture: OdysseyTexture) => {
-        this.PORTRAIT_LBL.setFillTexture(texture);
-      });
+    const portraitResRef = selectedCreature.getPortraitResRef();
+    if(portraitResRef){
+      this.PORTRAIT_LBL.show();
+      if (this.PORTRAIT_LBL.getFillTextureName() != portraitResRef) {
+        this.PORTRAIT_LBL.setFillTextureName(portraitResRef);
+        TextureLoader.tpcLoader.fetch(portraitResRef).then((texture: OdysseyTexture) => {
+          this.PORTRAIT_LBL.setFillTexture(texture);
+        });
+      }
+    }else{
+      this.PORTRAIT_LBL.hide();
     }
-    this.LBL_NAME.setText(GameState.CharGenManager.selectedCreature.firstName);
+    this.LBL_NAME.setText(selectedCreature.firstName ?? '');
     this.LBL_CLASS.setText(
       GameState.TLKManager.TLKStrings[CharGenClasses[GameState.CharGenManager.selectedClass]?.strings?.name]?.Value ?? ''
     )

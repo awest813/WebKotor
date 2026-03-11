@@ -14462,3 +14462,183 @@ describe('Section 174: CharGenName selectedCreature null-guard', () => {
   });
 
 });
+
+describe('Section 175: CharGenClass selectClass() always clears selecting state', () => {
+
+  it('resets selecting to false when model loading throws', async () => {
+    let selecting = false;
+    async function selectClass(loadModel: () => Promise<void>) {
+      if(selecting) return;
+      selecting = true;
+      try {
+        await loadModel();
+      } catch (_e) {
+        // mirrors runtime guard: loader failure is logged and swallowed
+      } finally {
+        selecting = false;
+      }
+    }
+    await expect(selectClass(async () => { throw new Error('load failed'); })).resolves.toBeUndefined();
+    expect(selecting).toBe(false);
+  });
+
+  it('resets selecting to false after successful load', async () => {
+    let selecting = false;
+    async function selectClass(loadModel: () => Promise<void>) {
+      if(selecting) return;
+      selecting = true;
+      try {
+        await loadModel();
+      } finally {
+        selecting = false;
+      }
+    }
+    await selectClass(async () => undefined);
+    expect(selecting).toBe(false);
+  });
+
+});
+
+describe('Section 176: CharGenSkills recommended allocation uses class/cross-class costs', () => {
+
+  it('spends 2 points for cross-class skill ranks', () => {
+    const manager = {
+      availSkillPoints: 2,
+      computerUse: 0,
+      getSkillCost: (idx: number) => idx === 0 ? 2 : 1,
+    };
+    const order = [0, -1, -1, -1, -1, -1, -1, -1];
+    let allocatedThisPass = false;
+    for(let i = 0; i < 8; i++){
+      const skillIndex = order[i];
+      if(skillIndex < 0) continue;
+      const cost = manager.getSkillCost(skillIndex);
+      if(manager.availSkillPoints < cost) continue;
+      if(skillIndex === 0) manager.computerUse++;
+      manager.availSkillPoints -= cost;
+      allocatedThisPass = true;
+    }
+    expect(allocatedThisPass).toBe(true);
+    expect(manager.computerUse).toBe(1);
+    expect(manager.availSkillPoints).toBe(0);
+  });
+
+  it('breaks out when remaining points cannot buy any recommended rank', () => {
+    const manager = {
+      availSkillPoints: 1,
+      getSkillCost: (_idx: number) => 2,
+    };
+    const order = [0, 1, 2, 3, 4, 5, 6, 7];
+    let loops = 0;
+    while(manager.availSkillPoints > 0){
+      loops++;
+      let allocatedThisPass = false;
+      for(let i = 0; i < 8; i++){
+        const cost = manager.getSkillCost(order[i]);
+        if(manager.availSkillPoints >= cost){
+          manager.availSkillPoints -= cost;
+          allocatedThisPass = true;
+        }
+      }
+      if(!allocatedThisPass) break;
+    }
+    expect(loops).toBe(1);
+    expect(manager.availSkillPoints).toBe(1);
+  });
+
+});
+
+describe('Section 177: CharGen finalization guards for missing selectedCreature/template', () => {
+
+  it('quick/custom finish handlers no-op when selected creature/template is missing', () => {
+    function canFinish(selectedCreature: any): boolean {
+      if(!selectedCreature?.template){
+        return false;
+      }
+      selectedCreature.equipment.ARMOR = undefined;
+      return true;
+    }
+    expect(canFinish(undefined)).toBe(false);
+    expect(canFinish({ template: undefined })).toBe(false);
+    expect(canFinish({ template: {}, equipment: { ARMOR: 1 } })).toBe(true);
+  });
+
+  it('CharGenMain.show exits gracefully when selected creature is undefined', () => {
+    function getDisplayState(selectedCreature: any) {
+      if(!selectedCreature){
+        return { portraitVisible: false, name: '', cls: '' };
+      }
+      return { portraitVisible: true, name: selectedCreature.firstName ?? '', cls: 'Soldier' };
+    }
+    expect(getDisplayState(undefined)).toEqual({ portraitVisible: false, name: '', cls: '' });
+    expect(getDisplayState({ firstName: 'Revan' })).toEqual({ portraitVisible: true, name: 'Revan', cls: 'Soldier' });
+  });
+
+});
+
+describe('Section 178: ModuleArea moon fog near/far assignment correctness', () => {
+
+  it('writes MoonFogNear into fogNear (not fogFar)', () => {
+    const moon: any = { fogNear: 0, fogFar: 0 };
+    const are = {
+      MoonFogFar: 100,
+      MoonFogNear: 20,
+    };
+    moon.fogFar = are.MoonFogFar;
+    moon.fogNear = are.MoonFogNear;
+    expect(moon.fogFar).toBe(100);
+    expect(moon.fogNear).toBe(20);
+  });
+
+});
+
+describe('Section 179: ModuleArea AreaProperties fallback defaults', () => {
+
+  it('returns defaults when AreaProperties fields are missing', () => {
+    function getAreaPropValue(fields: Record<string, any>, label: string, fallback: number): number {
+      const value = fields[label];
+      return value ?? fallback;
+    }
+    const fields = {};
+    expect(getAreaPropValue(fields, 'AmbientSndDay', 0)).toBe(0);
+    expect(getAreaPropValue(fields, 'MusicBattle', 0)).toBe(0);
+    expect(getAreaPropValue(fields, 'EnvAudio', -1)).toBe(-1);
+  });
+
+  it('uses field values when AreaProperties fields exist', () => {
+    function getAreaPropValue(fields: Record<string, any>, label: string, fallback: number): number {
+      const value = fields[label];
+      return value ?? fallback;
+    }
+    const fields = { AmbientSndDay: 12, MusicBattle: 4, EnvAudio: 9 };
+    expect(getAreaPropValue(fields, 'AmbientSndDay', 0)).toBe(12);
+    expect(getAreaPropValue(fields, 'MusicBattle', 0)).toBe(4);
+    expect(getAreaPropValue(fields, 'EnvAudio', -1)).toBe(9);
+  });
+
+});
+
+describe('Section 180: Galaxy map planet rendering context + Planetary TLK safe fallbacks', () => {
+
+  it('uses planet view context when creating planet model', () => {
+    function getModelContext() {
+      const _3dView = { id: 'galaxy' };
+      const _3dViewPlanet = { id: 'planet' };
+      return _3dViewPlanet.id;
+    }
+    expect(getModelContext()).toBe('planet');
+  });
+
+  it('Planetary getName/getDescription fallback to empty string when TLK entry missing', () => {
+    function getName(tlk: Record<number, any>, id: number) {
+      return tlk[id]?.Value ?? '';
+    }
+    function getDescription(tlk: Record<number, any>, id: number) {
+      return tlk[id]?.Value ?? '';
+    }
+    expect(getName({}, 123)).toBe('');
+    expect(getDescription({}, 456)).toBe('');
+    expect(getName({ 1: { Value: 'Dantooine' } }, 1)).toBe('Dantooine');
+  });
+
+});

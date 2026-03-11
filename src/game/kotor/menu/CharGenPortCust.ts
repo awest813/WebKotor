@@ -56,13 +56,23 @@ export class CharGenPortCust extends GameMenu {
       if(this.isCharLoading) return;
       this.isCharLoading = true;
       const creature = GameState.CharGenManager.selectedCreature;
+      if(!creature){
+        this.isCharLoading = false;
+        return;
+      }
+      const classData = CharGenClasses[GameState.CharGenManager.selectedClass];
+      const appearances = classData?.appearances;
+      if(!appearances?.length){
+        this.isCharLoading = false;
+        return;
+      }
     
-      let idx = CharGenClasses[GameState.CharGenManager.selectedClass].appearances.indexOf(creature.appearance);
-      const arrayLength = CharGenClasses[GameState.CharGenManager.selectedClass].appearances.length;
+      let idx = appearances.indexOf(creature.appearance);
+      const arrayLength = appearances.length;
       if(idx <= 0){
-        creature.appearance = CharGenClasses[GameState.CharGenManager.selectedClass].appearances[arrayLength - 1];
+        creature.appearance = appearances[arrayLength - 1];
       }else{
-        creature.appearance = CharGenClasses[GameState.CharGenManager.selectedClass].appearances[--idx];
+        creature.appearance = appearances[--idx];
       }
       creature.setAppearance(creature.appearance);
 
@@ -101,13 +111,23 @@ export class CharGenPortCust extends GameMenu {
       if(this.isCharLoading) return;
       this.isCharLoading = true;
       const creature = GameState.CharGenManager.selectedCreature;
+      if(!creature){
+        this.isCharLoading = false;
+        return;
+      }
+      const classData = CharGenClasses[GameState.CharGenManager.selectedClass];
+      const appearances = classData?.appearances;
+      if(!appearances?.length){
+        this.isCharLoading = false;
+        return;
+      }
 
-      let idx = CharGenClasses[GameState.CharGenManager.selectedClass].appearances.indexOf(creature.appearance);
-      const arrayLength = CharGenClasses[GameState.CharGenManager.selectedClass].appearances.length;
+      let idx = appearances.indexOf(creature.appearance);
+      const arrayLength = appearances.length;
       if(idx >= arrayLength - 1){
-        creature.appearance = CharGenClasses[GameState.CharGenManager.selectedClass].appearances[0];
+        creature.appearance = appearances[0];
       }else{
-        creature.appearance = CharGenClasses[GameState.CharGenManager.selectedClass].appearances[++idx];
+        creature.appearance = appearances[++idx];
       }
       creature.setAppearance(creature.appearance);
 
@@ -144,6 +164,10 @@ export class CharGenPortCust extends GameMenu {
     this.BTN_BACK.addEventListener('click', (e) => {
       e.stopPropagation();
       const creature = GameState.CharGenManager.selectedCreature;
+      if(!creature){
+        this.close();
+        return;
+      }
       if(!this.exiting){
         this.exiting = true;
         //Restore previous appearance
@@ -161,6 +185,9 @@ export class CharGenPortCust extends GameMenu {
     this.BTN_ACCEPT.addEventListener('click', (e) => {
       e.stopPropagation();
       const creature = GameState.CharGenManager.selectedCreature;
+      if(!creature?.template){
+        return;
+      }
       
       //Save appearance choice
       creature.template.getFieldByLabel('Appearance_Type')?.setValue(creature.appearance);
@@ -184,6 +211,9 @@ export class CharGenPortCust extends GameMenu {
   Init3D() {
     let control = this.LBL_HEAD;
     const creature = GameState.CharGenManager.selectedCreature;
+    if(!creature){
+      return;
+    }
     if(creature.model){
       creature.model.removeFromParent();
     }
@@ -216,6 +246,7 @@ export class CharGenPortCust extends GameMenu {
       return;
     try {
       const creature = GameState.CharGenManager.selectedCreature;
+      if(!creature) return;
       let modelControl = this.LBL_HEAD;
       creature.update(delta);
       this._3dView.render(delta);
@@ -227,7 +258,15 @@ export class CharGenPortCust extends GameMenu {
 
   UpdatePortrait() {
     const creature = GameState.CharGenManager.selectedCreature;
+    if(!creature){
+      this.LBL_PORTRAIT.hide();
+      return;
+    }
     const portraitResRef = creature.portrait?.getPortraitGoodEvil(50);
+    if(!portraitResRef){
+      this.LBL_PORTRAIT.hide();
+      return;
+    }
     this.LBL_PORTRAIT.show();
     if (this.LBL_PORTRAIT.getFillTextureName() != portraitResRef) {
       this.LBL_PORTRAIT.setFillTextureName(portraitResRef);
@@ -240,6 +279,10 @@ export class CharGenPortCust extends GameMenu {
   show() {
     super.show();
     const creature = GameState.CharGenManager.selectedCreature;
+    if(!creature){
+      this.LBL_PORTRAIT.hide();
+      return;
+    }
     this.appearance = creature.appearance;
     this.portraitId = creature.portraitId;
     try {
@@ -247,7 +290,9 @@ export class CharGenPortCust extends GameMenu {
     } catch (e: any) {
       console.error(e);
     }
-    this._3dView.addModel(creature.model);
+    if(creature.model){
+      this._3dView.addModel(creature.model);
+    }
     (this.LBL_PORTRAIT.getFill().material as THREE.ShaderMaterial).blending = 1;
     this.updateCamera();
     this.UpdatePortrait();
@@ -255,6 +300,9 @@ export class CharGenPortCust extends GameMenu {
 
   updateCamera() {
     const creature = GameState.CharGenManager.selectedCreature;
+    if(!creature){
+      return;
+    }
     if(this.sceneModel3D){
       if (creature.getGender() == 0) {
         if(this.sceneModel3D.camerahookm){

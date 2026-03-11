@@ -49,8 +49,14 @@ export class Planetary {
   }
 
   static SetSelectedPlanet( index = 0 ){
-    Planetary.selectedIndex = index;
-    Planetary.selected = Planetary.planets[index];
+    if(!Planetary.planets?.length){
+      Planetary.selectedIndex = -1;
+      Planetary.selected = undefined;
+      return;
+    }
+    const clampedIndex = Math.max(0, Math.min(index, Planetary.planets.length - 1));
+    Planetary.selectedIndex = clampedIndex;
+    Planetary.selected = Planetary.planets[clampedIndex];
   }
 
   static SetPlanetAvailable(index: number, bState: boolean){
@@ -62,6 +68,9 @@ export class Planetary {
   }
 
   static GetPlanetByGUITag(sTag = ''): Planet{
+    if(!Planetary.planets?.length){
+      return undefined;
+    }
 
     for(let i = 0; i < Planetary.planets.length; i++){
       if(Planetary.planets[i].guitag?.toLowerCase() === sTag.toLowerCase()){
@@ -73,6 +82,9 @@ export class Planetary {
   }
   
   static GetPlanetByIndex(index: number = 0): Planet {
+    if(!Planetary.planets?.length){
+      return undefined;
+    }
     return Planetary.planets[index];
   }
 
@@ -132,12 +144,12 @@ export class Planet {
   }
 
   getName(): string {
-    return GameState.TLKManager.TLKStrings[this.name].Value;
+    return GameState.TLKManager.TLKStrings[this.name]?.Value ?? '';
   }
 
   getDescription(): string {
     if(this.description)
-      return GameState.TLKManager.TLKStrings[this.description].Value;
+      return GameState.TLKManager.TLKStrings[this.description]?.Value ?? '';
     else
       return '';
   }

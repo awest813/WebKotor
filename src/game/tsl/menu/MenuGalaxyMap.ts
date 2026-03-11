@@ -63,6 +63,9 @@ export class MenuGalaxyMap extends K1_MenuGalaxyMap {
 
       this.BTN_ACCEPT.addEventListener('click', (e) => {
         e.stopPropagation();
+        if(!this.activePlanet){
+          return;
+        }
         if(!this.activePlanet?.selectable){
           if(this.activePlanet.lockedOutReason >= 0){
             GameState.MenuManager.InGameConfirm.fromStringRef(this.activePlanet.lockedOutReason);

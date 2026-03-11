@@ -83,6 +83,9 @@ export class MenuGalaxyMap extends GameMenu {
 
     this.BTN_ACCEPT.addEventListener('click', (e) => {
       e.stopPropagation();
+      if(!this.activePlanet){
+        return;
+      }
       if(!this.activePlanet?.selectable){
         if(this.activePlanet?.lockedOutReason >= 0){
           GameState.MenuManager.InGameConfirm.fromStringRef(this.activePlanet.lockedOutReason);
@@ -152,6 +155,9 @@ export class MenuGalaxyMap extends GameMenu {
       const planetControl = this._3D_PlanetModel;
       const planetModel = this._3dViewPlanetModel;
       const _3dView = this._3dViewPlanet;
+      if(!planetControl || !_3dView){
+        return;
+      }
       if(planetModel){
         const currentAnimation = planetModel.getAnimationName();
         if(!currentAnimation){
@@ -214,7 +220,7 @@ export class MenuGalaxyMap extends GameMenu {
       this._3dViewPlanet.removeModel(this._3dViewPlanetModel);
       const mdl = Planetary.models.get(planet.model);
       OdysseyModel3D.FromMDL(mdl, {
-        context: this._3dView
+        context: this._3dViewPlanet
       }).then((model: OdysseyModel3D) => {
         this._3dViewPlanetModel = model;
         
@@ -234,7 +240,10 @@ export class MenuGalaxyMap extends GameMenu {
   show() {
     super.show();
     // Planetary.SetSelectedPlanet(GameState.GlobalVariableManager.GetGlobalNumber('K_CURRENT_PLANET'));
-    this.changePlanet(Planetary.selected);
+    const initialPlanet = Planetary.selected || Planetary.planets?.[0];
+    if(initialPlanet){
+      this.changePlanet(initialPlanet);
+    }
     this.UpdateScale();
     const planets = Planetary.planets;
     for (let i = 0; i < planets.length; i++) {

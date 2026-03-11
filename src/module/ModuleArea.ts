@@ -949,7 +949,7 @@ export class ModuleArea extends ModuleObject {
     this.moon.diffuseColor = this.are.getFieldByLabel('MoonDiffuseColor').getValue();
     this.moon.fogColor = this.are.getFieldByLabel('MoonFogColor').getValue();
     this.moon.fogFar = this.are.getFieldByLabel('MoonFogFar').getValue();
-    this.moon.fogFar = this.are.getFieldByLabel('MoonFogNear').getValue();
+    this.moon.fogNear = this.are.getFieldByLabel('MoonFogNear').getValue();
     this.moon.fogOn = !!this.are.getFieldByLabel('MoonFogOn').getValue();
     this.moon.shadows = !!this.are.getFieldByLabel('MoonShadows').getValue();
     this.areaName = this.are.getFieldByLabel('Name').getCExoLocString();
@@ -1038,20 +1038,27 @@ export class ModuleArea extends ModuleObject {
 
     const areaPropsStruct = areaProps?.getChildStructs()[0];
     const areaPropsField = areaPropsStruct ? areaPropsStruct.getFields() : [];
-    this.audio.ambient.day = this.git.getFieldByLabel('AmbientSndDay', areaPropsField).getValue();
-    this.audio.ambient.dayVolume = this.git.getFieldByLabel('AmbientSndDayVol', areaPropsField).getValue();
-    this.audio.ambient.night = this.git.getFieldByLabel('AmbientSndNight', areaPropsField).getValue();
-    this.audio.ambient.nightVolume = this.git.getFieldByLabel('AmbientSndNitVol', areaPropsField).getValue();
+    const getAreaPropValue = <T = any>(label: string, fallback: T): T => {
+      const field = this.git.getFieldByLabel(label, areaPropsField);
+      if(!field) return fallback;
+      const value = field.getValue();
+      return (value ?? fallback) as T;
+    };
+
+    this.audio.ambient.day = getAreaPropValue<number>('AmbientSndDay', 0);
+    this.audio.ambient.dayVolume = getAreaPropValue<number>('AmbientSndDayVol', 0);
+    this.audio.ambient.night = getAreaPropValue<number>('AmbientSndNight', 0);
+    this.audio.ambient.nightVolume = getAreaPropValue<number>('AmbientSndNitVol', 0);
     if(areaPropsStruct?.hasField('EnvAudio')){
-      this.audio.environmentAudio = this.git.getFieldByLabel('EnvAudio', areaPropsField).getValue();
+      this.audio.environmentAudio = getAreaPropValue<number>('EnvAudio', -1);
     }else{
       this.audio.environmentAudio = -1;
     }
     
-    this.audio.music.battle = this.git.getFieldByLabel('MusicBattle', areaPropsField).getValue();
-    this.audio.music.day = this.git.getFieldByLabel('MusicDay', areaPropsField).getValue();
-    this.audio.music.delay = this.git.getFieldByLabel('MusicDelay', areaPropsField).getValue();
-    this.audio.music.night = this.git.getFieldByLabel('MusicNight', areaPropsField).getValue();
+    this.audio.music.battle = getAreaPropValue<number>('MusicBattle', 0);
+    this.audio.music.day = getAreaPropValue<number>('MusicDay', 0);
+    this.audio.music.delay = getAreaPropValue<number>('MusicDelay', 0);
+    this.audio.music.night = getAreaPropValue<number>('MusicNight', 0);
     AudioEngine.GetAudioEngine().setAreaAudioProperties(this.audio);
 
     // Load dynamic area state from save

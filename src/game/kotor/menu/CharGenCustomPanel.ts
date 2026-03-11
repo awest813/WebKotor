@@ -61,7 +61,7 @@ export class CharGenCustomPanel extends GameMenu {
 
       this.BTN_STEPNAME2.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.manager.CharGenAbilities.setCreature(GameState.getCurrentPlayer());
+        this.manager.CharGenAbilities.setCreature(GameState.CharGenManager.selectedCreature);
         this.manager.CharGenAbilities.open();
       });
 
@@ -82,17 +82,24 @@ export class CharGenCustomPanel extends GameMenu {
 
       this.BTN_STEPNAME6.addEventListener('click', (e) => {
         e.stopPropagation();
-        GameState.CharGenManager.selectedCreature.equipment.ARMOR = undefined;
-        const equipListField = GameState.CharGenManager.selectedCreature.template.getFieldByLabel('Equip_ItemList');
+        const selectedCreature = GameState.CharGenManager.selectedCreature;
+        if(!selectedCreature?.template){
+          console.warn('CharGenCustomPanel: selected creature/template missing, cannot finish chargen');
+          return;
+        }
+        selectedCreature.equipment.ARMOR = undefined;
+        const equipListField = selectedCreature.template.getFieldByLabel('Equip_ItemList');
         if(equipListField) equipListField.childStructs = [];
         // Recalculate HP from class hitdie + CON modifier before saving the template
-        GameState.CharGenManager.selectedCreature.recalculateMaxHP();
+        selectedCreature.recalculateMaxHP();
         GameState.GlobalVariableManager.Init();
-        GameState.PartyManager.PlayerTemplate = GameState.CharGenManager.selectedCreature.save();
+        GameState.PartyManager.PlayerTemplate = selectedCreature.save();
         GameState.PartyManager.ActualPlayerTemplate = GameState.PartyManager.PlayerTemplate;
-        GameState.PartyManager.AddPortraitToOrder(GameState.CharGenManager.selectedCreature.getPortraitResRef());
+        GameState.PartyManager.AddPortraitToOrder(selectedCreature.getPortraitResRef());
         CurrentGame.InitGameInProgressFolder(true).then( () => {
           GameState.LoadModule('end_m01aa');
+        }).catch((error: any) => {
+          console.error('CharGenCustomPanel: failed to initialize game-in-progress folder', error);
         });
       });
 

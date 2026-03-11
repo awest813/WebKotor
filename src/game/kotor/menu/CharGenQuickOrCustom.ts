@@ -35,28 +35,37 @@ export class CharGenQuickOrCustom extends GameMenu {
       this.QUICK_CHAR_BTN.addEventListener('click', (e) => {
         e.stopPropagation();
         try{
+          const creature = GameState.CharGenManager.selectedCreature;
+          if(!creature){
+            console.warn('CharGenQuickOrCustom: selected creature missing for quick character setup');
+            return;
+          }
           const class_data = GameState.SWRuleSet.classes[GameState.CharGenManager.selectedClass];
+          if(!class_data){
+            console.warn('CharGenQuickOrCustom: class data missing for selected class', GameState.CharGenManager.selectedClass);
+            return;
+          }
           const saving_throw_label = class_data['savingthrowtable'].toLowerCase();
           const saving_throw_table = GameState.TwoDAManager.datatables.get(saving_throw_label);
           const saving_throw_data = saving_throw_table?.rows[0];
           const feats_table = GameState.SWRuleSet.feats;
 
-          GameState.CharGenManager.selectedCreature.str = class_data.str;
-          GameState.CharGenManager.selectedCreature.dex = class_data.dex;
-          GameState.CharGenManager.selectedCreature.con = class_data.con;
-          GameState.CharGenManager.selectedCreature.wis = class_data.wis;
-          GameState.CharGenManager.selectedCreature.int = class_data.int;
-          GameState.CharGenManager.selectedCreature.cha = class_data.cha;
-          GameState.CharGenManager.selectedCreature.str = class_data.str;
+          creature.str = class_data.str;
+          creature.dex = class_data.dex;
+          creature.con = class_data.con;
+          creature.wis = class_data.wis;
+          creature.int = class_data.int;
+          creature.cha = class_data.cha;
+          creature.str = class_data.str;
 
-          GameState.CharGenManager.selectedCreature.fortbonus = parseInt(saving_throw_data?.fortsave ?? '0');
-          GameState.CharGenManager.selectedCreature.willbonus = parseInt(saving_throw_data?.willsave ?? '0');
-          GameState.CharGenManager.selectedCreature.refbonus = parseInt(saving_throw_data?.refsave ?? '0');
+          creature.fortbonus = parseInt(saving_throw_data?.fortsave ?? '0');
+          creature.willbonus = parseInt(saving_throw_data?.willsave ?? '0');
+          creature.refbonus = parseInt(saving_throw_data?.refsave ?? '0');
 
           for(let i = 0, len = feats_table.length; i < len; i++){
             const feat_data = feats_table[i];
             if(feat_data.getGranted(class_data) == 1){
-              GameState.CharGenManager.selectedCreature.feats.push(new TalentFeat(i));
+              creature.feats.push(new TalentFeat(i));
             }
           }
           
@@ -66,7 +75,7 @@ export class CharGenQuickOrCustom extends GameMenu {
           this.manager.CharGenQuickPanel.tGuiPanel.widget.position.y = 0;
           this.manager.CharGenMain.open();
         }catch(e){
-          console.log(e);
+          console.error(e);
         }
       });
 
@@ -92,7 +101,7 @@ export class CharGenQuickOrCustom extends GameMenu {
         //Game.CharGenMain.Hide();
 
         try{
-          GameState.CharGenManager.selectedCreature.model.parent.remove(GameState.CharGenManager.selectedCreature.model);
+          GameState.CharGenManager.selectedCreature?.model?.parent?.remove(GameState.CharGenManager.selectedCreature.model);
         }catch(e){}
 
         // this.manager.CharGenClass.getControlByName('_3D_MODEL'+(GameState.CharGenManager.selectedClass+1))

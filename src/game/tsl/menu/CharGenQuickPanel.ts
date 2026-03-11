@@ -49,17 +49,24 @@ export class CharGenQuickPanel extends K1_CharGenQuickPanel {
 
       this.BTN_STEPNAME3.addEventListener('click', (e) => {
         e.stopPropagation();
-        GameState.CharGenManager.selectedCreature.equipment.ARMOR = undefined;
-        const equipListField = GameState.CharGenManager.selectedCreature.template.getFieldByLabel('Equip_ItemList');
+        const selectedCreature = GameState.CharGenManager.selectedCreature;
+        if(!selectedCreature?.template){
+          console.warn('TSL CharGenQuickPanel: selected creature/template missing, cannot finish chargen');
+          return;
+        }
+        selectedCreature.equipment.ARMOR = undefined;
+        const equipListField = selectedCreature.template.getFieldByLabel('Equip_ItemList');
         if(equipListField) equipListField.childStructs = [];
         // Recalculate HP from class hitdie + CON modifier before saving the template
-        GameState.CharGenManager.selectedCreature.recalculateMaxHP();
+        selectedCreature.recalculateMaxHP();
         GameState.GlobalVariableManager.Init();
-        GameState.PartyManager.PlayerTemplate = GameState.CharGenManager.selectedCreature.save();
+        GameState.PartyManager.PlayerTemplate = selectedCreature.save();
         GameState.PartyManager.ActualPlayerTemplate = GameState.PartyManager.PlayerTemplate;
-        GameState.PartyManager.AddPortraitToOrder(GameState.CharGenManager.selectedCreature.getPortraitResRef());
+        GameState.PartyManager.AddPortraitToOrder(selectedCreature.getPortraitResRef());
         CurrentGame.InitGameInProgressFolder(true).then( () => {
           GameState.LoadModule('001EBO');
+        }).catch((error: any) => {
+          console.error('TSL CharGenQuickPanel: failed to initialize game-in-progress folder', error);
         });
       });
 

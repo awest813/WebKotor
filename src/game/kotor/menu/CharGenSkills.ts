@@ -99,17 +99,23 @@ export class CharGenSkills extends GameMenu {
       });
 
       this.BTN_RECOMMENDED.addEventListener('click', (e) => {
+        e.stopPropagation();
 
         GameState.CharGenManager.resetSkillPoints();
         GameState.CharGenManager.availSkillPoints = GameState.CharGenManager.getMaxSkillPoints();
         let skillOrder = GameState.CharGenManager.getRecommendedOrder();
         
         while(GameState.CharGenManager.availSkillPoints > 0){
+          let allocatedThisPass = false;
           for(let i = 0; i < 8; i++){
             let skillIndex = skillOrder[i];
 
             if(!GameState.CharGenManager.availSkillPoints)
               break;
+            if(skillIndex < 0) continue;
+
+            const cost = GameState.CharGenManager.getSkillCost(skillIndex);
+            if(GameState.CharGenManager.availSkillPoints < cost) continue;
 
             switch(skillIndex){
               case 0:
@@ -138,9 +144,13 @@ export class CharGenSkills extends GameMenu {
               break;
             }
             
-            if(skillIndex >= 0){
-              GameState.CharGenManager.availSkillPoints -= 1;
-            }
+            GameState.CharGenManager.availSkillPoints -= cost;
+            allocatedThisPass = true;
+          }
+
+          // No skill could be purchased with remaining points.
+          if(!allocatedThisPass){
+            break;
           }
         }
 
