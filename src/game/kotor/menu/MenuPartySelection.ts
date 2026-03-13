@@ -300,6 +300,7 @@ export class MenuPartySelection extends GameMenu {
   updateSelection() {
     for (let i = 0; i < GameState.PartyManager.MaxPartyCount; i++) {
       const btn = this.getControlByName('BTN_NPC' + i);
+      if (!btn) continue;
       if (GameState.PartyManager.IsNPCInParty(i)) {
         btn.setHighlightColor(0, 1, 0);
       } else {
@@ -355,6 +356,7 @@ export class MenuPartySelection extends GameMenu {
     for (let i = 0; i < GameState.PartyManager.MaxPartyCount; i++) {
       LBL_CHAR = this.getControlByName('LBL_CHAR' + i);
       LBL_NA = this.getControlByName('LBL_NA' + i);
+      if (!LBL_CHAR || !LBL_NA) continue;
       LBL_CHAR.hide();
       LBL_NA.show();
       if (!GameState.PartyManager.IsAvailable(i)) {

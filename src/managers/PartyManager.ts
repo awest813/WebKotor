@@ -418,7 +418,7 @@ export class PartyManager {
          * - index 18, unknown card, not sure if it's used at all
          */
         cardStruct.addField(new GFFField( isUnusedCard ? GFFDataType.BYTE : GFFDataType.INT, 'PT_PAZAAKCOUNT'))
-          .setValue(isUnusedCard ? 0 : card.count);
+          .setValue(isUnusedCard ? 0 : (card?.count ?? 0));
         pazaakCardsList.addChildStruct(cardStruct);
       }
 

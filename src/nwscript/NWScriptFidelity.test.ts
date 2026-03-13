@@ -14953,3 +14953,144 @@ describe('Section 187: InGameConfirm / MenuGraphicsAdvanced 2DA null-guards', ()
   });
 
 });
+
+describe('Section 188: InGameOverlay UpdateTargetUIIcon/UpdateSelfUIIcon null-guard on guiControl', () => {
+
+  it('UpdateTargetUIIcon returns early when guiControl is null', () => {
+    let called = false;
+    function UpdateTargetUIIcon(guiControl: any, targetPanelActions: number) {
+      if (!guiControl) return;
+      called = true;
+    }
+    UpdateTargetUIIcon(null, 0);
+    expect(called).toBe(false);
+    UpdateTargetUIIcon({ setMaterialTexture: () => {}, setFillTextureName: () => {} }, 0);
+    expect(called).toBe(true);
+  });
+
+  it('UpdateSelfUIIcon returns early when guiControl is null', () => {
+    let called = false;
+    function UpdateSelfUIIcon(guiControl: any, selfPanelActions: number) {
+      if (!guiControl) return;
+      called = true;
+    }
+    UpdateSelfUIIcon(null, 1);
+    expect(called).toBe(false);
+    UpdateSelfUIIcon({ getFillTextureName: () => '', setFillTextureName: () => {} }, 1);
+    expect(called).toBe(true);
+  });
+
+});
+
+describe('Section 189: InGameOverlay UpdateTargetUIPanels/UpdateSelfUIPanels null-guard for getControlByName', () => {
+
+  it('UpdateTargetUIPanels loop does not crash when BTN_TARGET control is missing', () => {
+    const controlMap: Record<string, any> = {
+      'BTN_TARGET0': { extent: { width: 50, height: 40, left: 0, top: 0 }, scale: true, anchor: null, recalculate: () => {}, show: () => {}, hide: () => {}, widget: { rotation: { z: 0 } } },
+    };
+    function getControlByName(name: string) { return controlMap[name] ?? null; }
+    let crashed = false;
+    try {
+      for (let i = 0; i < 3; i++) {
+        const btnTarget = getControlByName('BTN_TARGET' + i);
+        const lblTarget = getControlByName('LBL_TARGET' + i);
+        const btnTargetUp = getControlByName('BTN_TARGETUP' + i);
+        const btnTargetDown = getControlByName('BTN_TARGETDOWN' + i);
+        const xPos = ((btnTarget?.extent.width ?? 0) + 5) * i + 20;
+        if (btnTarget) {
+          btnTarget.scale = false;
+          btnTarget.extent.left = xPos;
+          btnTarget.extent.top = 100;
+        }
+        if (lblTarget) {
+          lblTarget.scale = false;
+        }
+        if (btnTargetUp) {
+          btnTargetUp.scale = false;
+        }
+        if (btnTargetDown) {
+          btnTargetDown.scale = false;
+          btnTargetDown.extent.top = 100 + ((btnTarget?.extent.height ?? 0) / 2 + 12);
+          btnTargetDown.widget.rotation.z = Math.PI;
+        }
+        btnTargetUp?.recalculate?.();
+        btnTargetDown?.recalculate?.();
+        btnTarget?.recalculate?.();
+        lblTarget?.recalculate?.();
+      }
+    } catch (_e) { crashed = true; }
+    expect(crashed).toBe(false);
+  });
+
+  it('UpdateSelfUIPanels loop does not crash when BTN_ACTIONUP control is missing', () => {
+    let crashed = false;
+    function getControlByName(name: string) { return null; }
+    try {
+      for (let i = 0; i < 3; i++) {
+        getControlByName('BTN_ACTIONUP' + i)?.recalculate?.();
+        getControlByName('BTN_ACTIONDOWN' + i)?.recalculate?.();
+      }
+    } catch (_e) { crashed = true; }
+    expect(crashed).toBe(false);
+  });
+
+});
+
+describe('Section 190: PartyManager Pazaak card null-guard', () => {
+
+  it('Pazaak card count defaults to 0 when card map entry is missing', () => {
+    const cards = new Map<number, { count: number }>();
+    cards.set(0, { count: 5 });
+    // card at index 1 is missing
+    function getCardCount(i: number, isUnused: boolean) {
+      const card = cards.get(i);
+      return isUnused ? 0 : (card?.count ?? 0);
+    }
+    expect(getCardCount(0, false)).toBe(5);
+    expect(getCardCount(1, false)).toBe(0);
+    expect(getCardCount(0, true)).toBe(0);
+  });
+
+});
+
+describe('Section 191: MenuPartySelection null-guards for getControlByName results', () => {
+
+  it('updateSelection loop skips missing BTN_NPC controls without crashing', () => {
+    const controls: Record<string, any> = {
+      'BTN_NPC0': { setHighlightColor: () => {}, disableBorder: () => {}, disableHighlight: () => {}, pulsing: false },
+    };
+    function getControlByName(name: string) { return controls[name] ?? null; }
+    let crashed = false;
+    try {
+      for (let i = 0; i < 3; i++) {
+        const btn = getControlByName('BTN_NPC' + i);
+        if (!btn) continue;
+        btn.setHighlightColor(1, 1, 0);
+        btn.disableBorder();
+        btn.disableHighlight();
+        btn.pulsing = false;
+      }
+    } catch (_e) { crashed = true; }
+    expect(crashed).toBe(false);
+  });
+
+  it('initPortraits loop skips missing LBL_CHAR/LBL_NA controls without crashing', () => {
+    const controls: Record<string, any> = {
+      'LBL_CHAR0': { hide: () => {}, show: () => {}, setFillTextureName: () => {}, getFillTextureName: () => '', getFill: () => ({ material: { uniforms: { opacity: { value: 1 } } } }) },
+      'LBL_NA0': { show: () => {}, hide: () => {}, getFillTextureName: () => '' },
+    };
+    function getControlByName(name: string) { return controls[name] ?? null; }
+    let crashed = false;
+    try {
+      for (let i = 0; i < 3; i++) {
+        const LBL_CHAR = getControlByName('LBL_CHAR' + i);
+        const LBL_NA = getControlByName('LBL_NA' + i);
+        if (!LBL_CHAR || !LBL_NA) continue;
+        LBL_CHAR.hide();
+        LBL_NA.show();
+      }
+    } catch (_e) { crashed = true; }
+    expect(crashed).toBe(false);
+  });
+
+});

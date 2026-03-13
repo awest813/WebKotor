@@ -584,6 +584,7 @@ export class InGameOverlay extends GameMenu {
 
   UpdateTargetUIIcon(index = 0) {
     const guiControl = this.getControlByName('LBL_TARGET' + index);
+    if (!guiControl) return;
     if (!GameState.ActionMenuManager.ActionPanels.targetPanels[index].actions.length) {
       guiControl.setMaterialTexture(guiControl.border.fill.material, undefined);
       guiControl.setMaterialTexture(guiControl.highlight.fill.material, undefined);
@@ -614,6 +615,7 @@ export class InGameOverlay extends GameMenu {
 
   UpdateSelfUIIcon(index = 0) {
     const guiControl = this.getControlByName('LBL_ACTION' + index);
+    if (!guiControl) return;
     if (GameState.ActionMenuManager.ActionPanels.selfPanels[index].actions.length) {
       const action = GameState.ActionMenuManager.ActionPanels.selfPanels[index].getSelectedAction();
       if (action && guiControl.getFillTextureName() != action.icon) {
@@ -775,38 +777,50 @@ export class InGameOverlay extends GameMenu {
     this.LBL_HEALTHBG.recalculate();
     if (!!GameState.ActionMenuManager.targetActionCount()) {
       for (let i = 0; i < GameState.ActionMenuManager.TARGET_MENU_COUNT; i++) {
-        let xPos = (this.getControlByName('BTN_TARGET' + i).extent.width + 5) * i + 20;
-        this.getControlByName('BTN_TARGET' + i).scale = false;
-        this.getControlByName('BTN_TARGET' + i).extent.left = this.targetScreenPosition.x + xPos;
-        this.getControlByName('BTN_TARGET' + i).extent.top = this.targetScreenPosition.y;
-        this.getControlByName('BTN_TARGET' + i).anchor = Anchor.User;
-        this.getControlByName('LBL_TARGET' + i).scale = false;
-        this.getControlByName('LBL_TARGET' + i).extent.left = this.targetScreenPosition.x + xPos + 3;
-        this.getControlByName('LBL_TARGET' + i).extent.top = this.targetScreenPosition.y + 14;
-        this.getControlByName('LBL_TARGET' + i).anchor = Anchor.User;
-        this.getControlByName('BTN_TARGETUP' + i).scale = false;
-        this.getControlByName('BTN_TARGETUP' + i).extent.left = this.targetScreenPosition.x + xPos;
-        this.getControlByName('BTN_TARGETUP' + i).extent.top = this.targetScreenPosition.y + 5;
-        this.getControlByName('BTN_TARGETUP' + i).anchor = Anchor.User;
-        this.getControlByName('BTN_TARGETDOWN' + i).scale = false;
-        this.getControlByName('BTN_TARGETDOWN' + i).extent.left = this.targetScreenPosition.x + xPos;
-        this.getControlByName('BTN_TARGETDOWN' + i).extent.top = this.targetScreenPosition.y + (this.getControlByName('BTN_TARGET' + i).extent.height / 2 + 12);
-        this.getControlByName('BTN_TARGETDOWN' + i).widget.rotation.z = Math.PI;
-        this.getControlByName('BTN_TARGETDOWN' + i).anchor = Anchor.User;
+        const btnTarget = this.getControlByName('BTN_TARGET' + i);
+        const lblTarget = this.getControlByName('LBL_TARGET' + i);
+        const btnTargetUp = this.getControlByName('BTN_TARGETUP' + i);
+        const btnTargetDown = this.getControlByName('BTN_TARGETDOWN' + i);
+        let xPos = ((btnTarget?.extent.width ?? 0) + 5) * i + 20;
+        if (btnTarget) {
+          btnTarget.scale = false;
+          btnTarget.extent.left = this.targetScreenPosition.x + xPos;
+          btnTarget.extent.top = this.targetScreenPosition.y;
+          btnTarget.anchor = Anchor.User;
+        }
+        if (lblTarget) {
+          lblTarget.scale = false;
+          lblTarget.extent.left = this.targetScreenPosition.x + xPos + 3;
+          lblTarget.extent.top = this.targetScreenPosition.y + 14;
+          lblTarget.anchor = Anchor.User;
+        }
+        if (btnTargetUp) {
+          btnTargetUp.scale = false;
+          btnTargetUp.extent.left = this.targetScreenPosition.x + xPos;
+          btnTargetUp.extent.top = this.targetScreenPosition.y + 5;
+          btnTargetUp.anchor = Anchor.User;
+        }
+        if (btnTargetDown) {
+          btnTargetDown.scale = false;
+          btnTargetDown.extent.left = this.targetScreenPosition.x + xPos;
+          btnTargetDown.extent.top = this.targetScreenPosition.y + ((btnTarget?.extent.height ?? 0) / 2 + 12);
+          btnTargetDown.widget.rotation.z = Math.PI;
+          btnTargetDown.anchor = Anchor.User;
+        }
         this.UpdateTargetUIIcon(i);
-        this.getControlByName('BTN_TARGETUP' + i).recalculate();
-        this.getControlByName('BTN_TARGETDOWN' + i).recalculate();
-        this.getControlByName('BTN_TARGET' + i).recalculate();
-        this.getControlByName('LBL_TARGET' + i).recalculate();
-        this.getControlByName('BTN_TARGET' + i)?.show();
-        this.getControlByName('LBL_TARGET' + i)?.show();
+        btnTargetUp?.recalculate();
+        btnTargetDown?.recalculate();
+        btnTarget?.recalculate();
+        lblTarget?.recalculate();
+        btnTarget?.show();
+        lblTarget?.show();
         
         if(GameState.ActionMenuManager.ActionPanels.targetPanels[i].actions.length <= 1){
-          this.getControlByName('BTN_TARGETUP' + i)?.hide();
-          this.getControlByName('BTN_TARGETDOWN' + i)?.hide();
+          btnTargetUp?.hide();
+          btnTargetDown?.hide();
         }else{
-          this.getControlByName('BTN_TARGETUP' + i)?.show();
-          this.getControlByName('BTN_TARGETDOWN' + i)?.show();
+          btnTargetUp?.show();
+          btnTargetDown?.show();
         }
       }
     } else {
@@ -822,8 +836,8 @@ export class InGameOverlay extends GameMenu {
   UpdateSelfUIPanels(delta = 0) {
     for (let i = 0; i < GameState.ActionMenuManager.SELF_MENU_COUNT; i++) {
       this.UpdateSelfUIIcon(i);
-      this.getControlByName('BTN_ACTIONUP' + i).recalculate();
-      this.getControlByName('BTN_ACTIONDOWN' + i).recalculate();
+      this.getControlByName('BTN_ACTIONUP' + i)?.recalculate();
+      this.getControlByName('BTN_ACTIONDOWN' + i)?.recalculate();
         
       if(GameState.ActionMenuManager.ActionPanels.selfPanels[i].actions.length <= 1){
         this.getControlByName('BTN_ACTIONUP' + i)?.hide();
