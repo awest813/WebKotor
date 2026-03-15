@@ -133,7 +133,7 @@ export class OdysseyModelAnimation {
     const animations2DA = TwoDAManager.datatables.get('animations');
     if(animations2DA){
       for(let i = 0, len = animations2DA.RowCount; i < len; i++){
-        if(animations2DA.rows[i].name.toLowerCase() == name.toLowerCase()){
+        if(animations2DA.rows[i]?.name?.toLowerCase() == name.toLowerCase()){
           return animations2DA.rows[i];
         }
       }
