@@ -5745,7 +5745,9 @@ NWScriptDefK1.Actions = {
     args: [NWScriptDataType.OBJECT, NWScriptDataType.INTEGER],
     action: function(this: NWScriptInstance, args: [ModuleObject, number]){
       if(BitWise.InstanceOfObject(args[0], ModuleObjectType.ModuleCreature)){
-        args[0].faction = GameState.FactionManager.factions.get(args[1]);
+        const faction = GameState.FactionManager.factions.get(args[1]);
+        if(!faction) return;
+        args[0].faction = faction;
         GameState.FactionManager.AddCreatureToFaction(args[0]);
       }
     }
@@ -7499,7 +7501,7 @@ NWScriptDefK1.Actions = {
     args: [],
     action: function(this: NWScriptInstance, args: []){
       this.partyMemberIndex = 0;
-      return GameState.PartyManager.party[0];
+      return GameState.PartyManager.party?.[0];
     }
   },
   549:{
@@ -7850,7 +7852,7 @@ NWScriptDefK1.Actions = {
     type: NWScriptDataType.OBJECT,
     args: [NWScriptDataType.INTEGER],
     action: function(this: NWScriptInstance, args: [number]){
-      return GameState.PartyManager.party[args[0]];
+      return GameState.PartyManager.party?.[args[0]];
     }
   },
   578:{

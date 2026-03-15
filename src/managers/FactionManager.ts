@@ -63,7 +63,7 @@ export class FactionManager {
   static GetFactionLeader( creature: ModuleObject ){
     if(BitWise.InstanceOf(creature?.objectType, ModuleObjectType.ModuleCreature)){
       if(creature.faction?.id == 0){
-        return GameState.PartyManager.party[0];
+        return GameState.PartyManager.party?.[0];
       }else{
         let faction = FactionManager.GetCreatureFaction(creature);
         if(faction){

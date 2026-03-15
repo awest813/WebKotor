@@ -435,10 +435,12 @@ export class OdysseyModel3D extends OdysseyObject3D {
       }
 
       const animations2DA = TwoDAManager.datatables.get('animations');
-      for(let i = 0, len = animations2DA.rows.length; i < len; i++){
-        if(animations2DA.rows[i].name == this.animationManager.currentAnimation.name){
-          this.animationManager.currentAnimationState.animation = animations2DA.rows[i];
-          break;
+      if(animations2DA){
+        for(let i = 0, len = animations2DA.rows.length; i < len; i++){
+          if(animations2DA.rows[i]?.name == this.animationManager.currentAnimation.name){
+            this.animationManager.currentAnimationState.animation = animations2DA.rows[i];
+            break;
+          }
         }
       }
       return this.animationManager.currentAnimation;

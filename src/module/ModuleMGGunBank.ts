@@ -151,9 +151,11 @@ export class ModuleMGGunBank extends ModuleObject {
     if(this.template.RootNode.hasField('Vert_Spread'))
       this.vertSpread = this.template.getFieldByLabel('Vert_Spread').getValue()
       
-    this.bulletTemplate = GFFObject.FromStruct(this.template.RootNode.getFieldByLabel('Bullet').getChildStructs()[0]);
-    this.proto_bullet = new ModuleMGGunBullet(this.bulletTemplate, this);
-    this.proto_bullet.initProperties();
+    if(this.template.RootNode.hasField('Bullet')){
+      this.bulletTemplate = GFFObject.FromStruct(this.template.RootNode.getFieldByLabel('Bullet').getChildStructs()[0]);
+      this.proto_bullet = new ModuleMGGunBullet(this.bulletTemplate, this);
+      this.proto_bullet.initProperties();
+    }
 
   }
 

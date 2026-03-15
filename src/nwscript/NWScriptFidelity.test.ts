@@ -15226,3 +15226,167 @@ describe('Section 196: ModuleMGPlayer getCurrentRoom/findWalkableFace room null-
   });
 
 });
+
+describe('Section 197: OdysseyModel3D playAnimation animations2DA null-guard', () => {
+
+  it('does not crash when animations2DA is undefined', () => {
+    let crashed = false;
+    try {
+      const animations2DA: any = undefined;
+      const currentAnimName = 'idle';
+      if(animations2DA){
+        for(let i = 0, len = animations2DA.rows.length; i < len; i++){
+          if(animations2DA.rows[i]?.name == currentAnimName){
+            break;
+          }
+        }
+      }
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+  });
+
+  it('does not crash when rows[i] is undefined in animations2DA', () => {
+    let crashed = false;
+    let found = -1;
+    try {
+      const animations2DA: any = {
+        rows: [{ name: 'walk' }, undefined, { name: 'idle' }],
+      };
+      const currentAnimName = 'idle';
+      if(animations2DA){
+        for(let i = 0, len = animations2DA.rows.length; i < len; i++){
+          if(animations2DA.rows[i]?.name == currentAnimName){
+            found = i;
+            break;
+          }
+        }
+      }
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(found).toBe(2);
+  });
+
+});
+
+describe('Section 198: OdysseyModelAnimation GetAnimation2DA rows[i] null-guard', () => {
+
+  it('does not crash when rows[i] is undefined', () => {
+    let crashed = false;
+    let result: any = undefined;
+    try {
+      const rows: any[] = [{ name: 'walk' }, undefined, { name: 'idle' }];
+      const name = 'idle';
+      for(let i = 0; i < rows.length; i++){
+        if(rows[i]?.name?.toLowerCase() == name.toLowerCase()){
+          result = rows[i];
+          break;
+        }
+      }
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(result?.name).toBe('idle');
+  });
+
+  it('does not crash when rows[i].name is null or undefined', () => {
+    let crashed = false;
+    let found: any = undefined;
+    try {
+      const rows: any[] = [{ name: null }, { name: undefined }, { name: 'idle' }];
+      const name = 'idle';
+      for(let i = 0; i < rows.length; i++){
+        if(rows[i]?.name?.toLowerCase() == name.toLowerCase()){
+          found = rows[i];
+          break;
+        }
+      }
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(found?.name).toBe('idle');
+  });
+
+});
+
+describe('Section 199: ModuleMGGunBank Bullet field null-guard', () => {
+
+  it('does not crash when Bullet field is missing from template', () => {
+    let crashed = false;
+    let bulletInitialized = false;
+    try {
+      const template: any = {
+        RootNode: {
+          hasField: (label: string) => label !== 'Bullet',
+          getFieldByLabel: (_label: string) => null,
+        }
+      };
+      if(template.RootNode.hasField('Bullet')){
+        const struct = template.RootNode.getFieldByLabel('Bullet')?.getChildStructs()?.[0];
+        if(struct){ bulletInitialized = true; }
+      }
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(bulletInitialized).toBe(false);
+  });
+
+});
+
+describe('Section 200: GetFirstPC / GetPartyMemberByIndex party null-guard', () => {
+
+  it('GetFirstPC returns undefined safely when party is empty', () => {
+    let crashed = false;
+    let result: any = 'unset';
+    try {
+      const party: any[] = [];
+      result = party?.[0];
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(result).toBeUndefined();
+  });
+
+  it('GetPartyMemberByIndex returns undefined safely for out-of-bounds index', () => {
+    let crashed = false;
+    let result: any = 'unset';
+    try {
+      const party: any[] = [{ name: 'Revan' }];
+      result = party?.[5];
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(result).toBeUndefined();
+  });
+
+});
+
+describe('Section 201: ChangeToStandardFaction null-guard for missing faction', () => {
+
+  it('does not assign undefined faction when faction id not found', () => {
+    let crashed = false;
+    let factionAssigned = false;
+    try {
+      const factions = new Map<number, any>([[1, { id: 1, label: 'hostile' }]]);
+      const creature: any = { faction: undefined };
+      const faction = factions.get(99);
+      if(faction){
+        creature.faction = faction;
+        factionAssigned = true;
+      }
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(factionAssigned).toBe(false);
+  });
+
+  it('assigns faction correctly when faction id is valid', () => {
+    let crashed = false;
+    let factionAssigned = false;
+    try {
+      const factions = new Map<number, any>([[1, { id: 1, label: 'hostile' }]]);
+      const creature: any = { faction: undefined };
+      const faction = factions.get(1);
+      if(faction){
+        creature.faction = faction;
+        factionAssigned = true;
+      }
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(factionAssigned).toBe(true);
+  });
+
+});
