@@ -605,6 +605,7 @@ export class ModuleArea extends ModuleObject {
   updateMusic(delta: number = 0){
     const audioEngine = AudioEngine.GetAudioEngine();
     const oPC = GameState.getCurrentPlayer();
+    if(!oPC) return;
     if(oPC.excitedDuration > 0 && audioEngine.bgmMode == BackgroundMusicMode.AREA && audioEngine.battleMusicLoaded){
       audioEngine.bgmMode = BackgroundMusicMode.BATTLE;
       audioEngine.areaMusicDayAudioEmitter.stop();
@@ -1242,7 +1243,6 @@ export class ModuleArea extends ModuleObject {
       const buffer = await ResourceLoader.loadResource(ResourceTypes.vis, this.name);
       this.visObject = new VISObject(buffer);
       this.visObject.read();
-      return;
     }catch(e){
       this.visObject = new VISObject();
       console.error(e);
@@ -1643,17 +1643,19 @@ export class ModuleArea extends ModuleObject {
 
         try{
           const model = await player.loadModel();
-          model.userData.moduleObject = player;
-          model.hasCollision = true;
+          if(model){
+            model.userData.moduleObject = player;
+            model.hasCollision = true;
 
-          let spawnLoc = this.getSpawnLocation();
+            let spawnLoc = this.getSpawnLocation();
 
-          player.position.copy(spawnLoc.position);
-          player.setFacing(-Math.atan2(spawnLoc.rotation.x, spawnLoc.rotation.y), true);
-          //player.quaternion.setFromAxisAngle(new THREE.Vector3(0,0,1), -Math.atan2(spawnLoc.XOrientation, spawnLoc.YOrientation));
+            player.position.copy(spawnLoc.position);
+            player.setFacing(-Math.atan2(spawnLoc.rotation.x, spawnLoc.rotation.y), true);
+            //player.quaternion.setFromAxisAngle(new THREE.Vector3(0,0,1), -Math.atan2(spawnLoc.XOrientation, spawnLoc.YOrientation));
 
-          player.getCurrentRoom();
-          player.computeBoundingBox(true);
+            player.getCurrentRoom();
+            player.computeBoundingBox(true);
+          }
         }catch(e){
           console.error(e);
         }

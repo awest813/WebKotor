@@ -354,6 +354,7 @@ export class Module {
 
   addEffect(effect?: GameEffect, lLocation?: EngineLocation){
     if(!(effect instanceof GameEffect)){ return; }
+    if(!(lLocation instanceof EngineLocation)){ return; }
 
     effect.loadModel();
     const object: any = {
@@ -489,13 +490,13 @@ export class Module {
 
     const onLoad = this.scripts[ModuleObjectScript.ModuleOnLoad];
     if(onLoad){
-      onLoad.enteringObject = GameState.PartyManager.party[0];
+      onLoad.enteringObject = GameState.PartyManager.party[0] ?? GameState.PartyManager.Player;
       onLoad.run(this.area, 0);
     }
 
     const onPlayerClientEnter = this.scripts[ModuleObjectScript.ModuleOnPlayerClientEnter];
     if(onPlayerClientEnter){
-      onPlayerClientEnter.enteringObject = GameState.PartyManager.party[0];
+      onPlayerClientEnter.enteringObject = GameState.PartyManager.party[0] ?? GameState.PartyManager.Player;
       onPlayerClientEnter.run(this.area, 0);
     }
   }

@@ -486,7 +486,9 @@ export class PartyManager {
       this.Gold = 0;
     }
 
-    GameState.UINotificationManager.EnableUINotificationIconType(amount > 0 ? UIIconTimerType.CREDITS_RECEIVED : UIIconTimerType.CREDITS_RECEIVED);
+    if(amount > 0){
+      GameState.UINotificationManager.EnableUINotificationIconType(UIIconTimerType.CREDITS_RECEIVED);
+    }
   }
 
   /**

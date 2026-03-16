@@ -504,6 +504,7 @@ export class ModulePlaceable extends ModuleObject {
             object.removeItem(keyItem);
           }
           object.playSoundSet(SSFType.UNLOCK_SUCCESS);
+          return;
         }
       }
 

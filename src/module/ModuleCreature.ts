@@ -1696,7 +1696,7 @@ export class ModuleCreature extends ModuleObject {
           let damageAnim = anims.getByID(damageAnimIndex);
           if(damageAnim && damageAnim.name && this.model?.odysseyAnimationMap?.get(damageAnim.name.toLowerCase().trim())){
             //console.log('dodge/parry anim', this.getName(), damageAnim.name)
-            return damageAnim.name;
+            return OdysseyModelAnimation.GetAnimation2DA(damageAnim.name);
           }
         }
         
@@ -1966,7 +1966,7 @@ export class ModuleCreature extends ModuleObject {
     const appearance = this.creatureAppearance;
     const rhSounds = this.equipment.RIGHTHAND?.weaponSound;
     const lhSounds = this.equipment.LEFTHAND?.weaponSound;
-    const footstepSounds = GameState.SWRuleSet.footSteps[appearance.footsteptype];
+    const footstepSounds = appearance ? GameState.SWRuleSet.footSteps[appearance.footsteptype] : undefined;
 
     let rhWeaponSoundResRef = '';
     let lhWeaponSoundResRef = '';

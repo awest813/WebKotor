@@ -609,23 +609,9 @@ export class ModuleDoor extends ModuleObject {
           }
         }
       }
-    }else{
-      //Check Creatures
-      const areaCreatures = GameState.module?.area?.creatures;
-      if(!areaCreatures) return;
-      let creatureLen = areaCreatures.length;
-      for(let i = 0; i < creatureLen; i++){
-        let creature = areaCreatures[i];
-        if(this.box.containsPoint(creature.position)){
-          if(this.objectsInside.indexOf(creature) == -1){
-            this.objectsInside.push(creature);
-
-            creature.lastDoorEntered = this;
-            this.lastObjectEntered = creature;
-          }
-        }
-      }
     }
+    // Non-transition doors do not pre-populate objectsInside — doing so would
+    // cause spurious onExit events the first time nearby creatures move away.
   }
 
   onSpawn(runScript = true){
