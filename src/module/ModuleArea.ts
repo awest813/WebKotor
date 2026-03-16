@@ -2121,7 +2121,7 @@ export class ModuleArea extends ModuleObject {
   runOnEnterScripts(){
     const nwscript = this.scripts[ModuleObjectScript.AreaOnEnter];
     if(!nwscript){ return; }
-    nwscript.enteringObject = GameState.PartyManager.party[0];
+    nwscript.enteringObject = GameState.PartyManager.party[0] ?? null;
     nwscript.run(this, 0);
   }
 

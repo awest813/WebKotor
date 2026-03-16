@@ -2280,7 +2280,7 @@ export class ModuleCreature extends ModuleObject {
     this.weaponPowered(false);
 
     // Check if all party members are dead → show Game Over screen
-    if(GameState.PartyManager.party.length && GameState.PartyManager.party.every(m => m.isDead())){
+    if(GameState.PartyManager.party.length && GameState.PartyManager.party.every(m => m?.isDead())){
       GameState.MenuManager.MenuGameOver?.open();
     }
 

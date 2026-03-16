@@ -957,7 +957,7 @@ export class PartyManager {
       return 2
     }
 
-    return PartyManager.party.length;
+    return Math.min(PartyManager.party.length, PartyManager.MaxSize - 1);
 
   }
 
@@ -977,7 +977,7 @@ export class PartyManager {
       return;
     }
 
-    let currentSlot: ModuleCreature;
+    let currentSlot: ModuleCreature = PartyManager.party[nIdx + 1];
 
     try{
       if(!(currentSlot instanceof ModuleCreature)){
@@ -993,14 +993,18 @@ export class PartyManager {
         PartyManager.AddPortraitToOrder( partyMember.getPortraitResRef() );
         PartyManager.party[ PartyManager.GetCreatureStartingPartyIndex(partyMember) ] = partyMember;
         let spawn = PartyManager.GetSpawnLocation(partyMember);
-        partyMember.position.copy(spawn.position);
-        partyMember.setFacing(spawn.getFacing(), true);
-        
+        if(spawn){
+          partyMember.position.copy(spawn.position);
+          partyMember.setFacing(spawn.getFacing(), true);
+        }
+
         const model = await partyMember.loadModel();
         model.userData.moduleObject = partyMember;
 
-        partyMember.position.copy(spawn.position);
-        partyMember.setFacing(spawn.getFacing(), true);
+        if(spawn){
+          partyMember.position.copy(spawn.position);
+          partyMember.setFacing(spawn.getFacing(), true);
+        }
         //partyMember.quaternion.setFromAxisAngle(new THREE.Vector3(0,0,1), -Math.atan2(0, 0));
   
         model.hasCollision = true;
@@ -1013,8 +1017,10 @@ export class PartyManager {
         partyMember.actionQueue.add(followAction);
       }else{
         const spawn = PartyManager.GetSpawnLocation(currentSlot);
-        currentSlot.position.copy(spawn.position);
-        currentSlot.setFacing(spawn.getFacing(), true);
+        if(spawn){
+          currentSlot.position.copy(spawn.position);
+          currentSlot.setFacing(spawn.getFacing(), true);
+        }
         //currentSlot.quaternion.setFromAxisAngle(new THREE.Vector3(0,0,1), -Math.atan2(0, 0));
       }
     }catch(e){
