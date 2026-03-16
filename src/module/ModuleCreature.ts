@@ -1997,7 +1997,7 @@ export class ModuleCreature extends ModuleObject {
         rhWeaponSoundResRef = rhSounds?.getClashResRef() || '';
       break;
       case 'Hit':
-        if(this.combatData.combatAction && this.combatData.combatAction.hits && this.combatData.combatAction.damage){
+        if(this.combatData.combatAction && this.combatData.combatAction.hits && this.combatData.combatAction.damage && this.combatData.combatAction.target){
           this.combatData.combatAction.target.damage(this.combatData.combatAction.damage, this);
         }
 
