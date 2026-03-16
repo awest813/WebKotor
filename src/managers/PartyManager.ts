@@ -201,9 +201,11 @@ export class PartyManager {
     if(gff.RootNode.hasField('PT_AVAIL_NPCS')){
       let avail = gff.getFieldByLabel('PT_AVAIL_NPCS').getChildStructs();
       for(let i = 0; i < avail.length; i++){
-        //console.log(PartyManager.NPCS[i]);
-        GameState.PartyManager.NPCS[i].available = avail[i].getFieldByLabel('PT_NPC_AVAIL').getValue();
-        GameState.PartyManager.NPCS[i].canSelect = avail[i].getFieldByLabel('PT_NPC_SELECT').getValue();
+        if(!GameState.PartyManager.NPCS[i]) continue;
+        const availField = avail[i]?.getFieldByLabel('PT_NPC_AVAIL');
+        const selectField = avail[i]?.getFieldByLabel('PT_NPC_SELECT');
+        if(availField) GameState.PartyManager.NPCS[i].available = availField.getValue();
+        if(selectField) GameState.PartyManager.NPCS[i].canSelect = selectField.getValue();
       }
     }
   
@@ -211,8 +213,11 @@ export class PartyManager {
     if(gff.RootNode.hasField('PT_AVAIL_PUPS')){
       let avail = gff.getFieldByLabel('PT_AVAIL_PUPS').getChildStructs();
       for(let i = 0; i < avail.length; i++){
-        GameState.PartyManager.Puppets[i].available = !!avail[i].getFieldByLabel('PT_PUP_AVAIL').getValue();
-        GameState.PartyManager.Puppets[i].select = !!avail[i].getFieldByLabel('PT_PUP_SELECT').getValue();
+        if(!GameState.PartyManager.Puppets[i]) continue;
+        const availField = avail[i]?.getFieldByLabel('PT_PUP_AVAIL');
+        const selectField = avail[i]?.getFieldByLabel('PT_PUP_SELECT');
+        if(availField) GameState.PartyManager.Puppets[i].available = !!availField.getValue();
+        if(selectField) GameState.PartyManager.Puppets[i].select = !!selectField.getValue();
       }
     }
 

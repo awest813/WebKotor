@@ -173,7 +173,8 @@ export class ModulePlaceable extends ModuleObject {
   }
 
   onClick(callee: ModuleObject){
-    GameState.getCurrentPlayer().actionUseObject( this );
+    const player = GameState.getCurrentPlayer();
+    if(player) player.actionUseObject( this );
   }
 
   detachFromRoom(room: ModuleRoom): void {

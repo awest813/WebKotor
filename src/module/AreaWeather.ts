@@ -36,8 +36,9 @@ export class AreaWeather {
    * Update the weather model to animate the weather effect
    */
   update(delta: number = 0){
-    if(this.model){
-      this.model.position.copy( GameState.getCurrentPlayer().position ).add( new THREE.Vector3(0,0,3) );
+    const currentPlayer = GameState.getCurrentPlayer();
+    if(this.model && currentPlayer){
+      this.model.position.copy( currentPlayer.position ).add( new THREE.Vector3(0,0,3) );
       this.model.update(delta);
     }
   }

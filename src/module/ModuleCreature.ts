@@ -421,7 +421,7 @@ export class ModuleCreature extends ModuleObject {
 
     if(this.audioEmitter){
       this.audioEmitter.setPosition(this.position.x, this.position.y, this.position.z + 1.0);
-      this.footstepEmitter.setPosition(this.position.x, this.position.y, this.position.z);
+      this.footstepEmitter?.setPosition(this.position.x, this.position.y, this.position.z);
     }
 
     this.forceVector.set(0, 0, 0);
@@ -431,8 +431,10 @@ export class ModuleCreature extends ModuleObject {
     if(GameState.Mode == EngineMode.INGAME || GameState.Mode == EngineMode.MINIGAME || GameState.Mode == EngineMode.DIALOG){
 
       if(this.animationState.index == ModuleCreatureAnimState.IDLE){
-        this.footstepEmitter.isLooping = false;
-        this.footstepEmitter.stop();
+        if(this.footstepEmitter){
+          this.footstepEmitter.isLooping = false;
+          this.footstepEmitter.stop();
+        }
       }
 
       if(!this.isReady){
@@ -1958,8 +1960,8 @@ export class ModuleCreature extends ModuleObject {
   }
 
   playEvent(event: THREE.Event){
-    this.audioEmitter.setPosition(this.position.x, this.position.y, this.position.z);
-    this.footstepEmitter.setPosition(this.position.x, this.position.y, this.position.z);
+    this.audioEmitter?.setPosition(this.position.x, this.position.y, this.position.z);
+    this.footstepEmitter?.setPosition(this.position.x, this.position.y, this.position.z);
     
     const appearance = this.creatureAppearance;
     const rhSounds = this.equipment.RIGHTHAND?.weaponSound;
@@ -2003,14 +2005,14 @@ export class ModuleCreature extends ModuleObject {
       break;
     }
 
-    if(footstepSoundResRef && footstepIsLooping && !this.footstepEmitter.isPlayingSound(footstepSoundResRef)){
+    if(this.footstepEmitter && footstepSoundResRef && footstepIsLooping && !this.footstepEmitter.isPlayingSound(footstepSoundResRef)){
       console.log('Playing rolling sound', footstepSoundResRef);
       this.footstepEmitter.playSound(footstepSoundResRef);
-    }else if(footstepSoundResRef){
+    }else if(this.footstepEmitter && footstepSoundResRef){
       this.footstepEmitter.playSoundFireAndForget(footstepSoundResRef);
     }
 
-    if(rhWeaponSoundResRef){
+    if(this.audioEmitter && rhWeaponSoundResRef){
       this.audioEmitter.playSoundFireAndForget(rhWeaponSoundResRef);
     }
   }
