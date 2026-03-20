@@ -13,7 +13,7 @@
   <img src="https://raw.githubusercontent.com/KobaltBlu/KotOR.js/master/src/assets/icons/icon.png" alt="KotOR.js Logo" />
 </p>
 
-**A TypeScript reimplementation of the Odyssey Game Engine that powered Star Wars: Knights of the Old Republic I & II — playable in both Electron and the browser.**
+**A TypeScript reimplementation of the Odyssey Game Engine that powered Star Wars: Knights of the Old Republic I & II — with substantial in-engine progress, but not yet fully playable from start to finish.**
 
 [![OpenKotOR Discord](https://discordapp.com/api/guilds/739590575359262792/widget.png?style=banner2)](https://discord.gg/QxjqVAuN8T)
 
@@ -48,14 +48,23 @@
 
 Written entirely in TypeScript, KotOR.js targets both desktop environments (via Electron) and modern web browsers (via WebGL/WebAssembly). The project reads original game assets from a valid, user-supplied installation of KotOR I or KotOR II — no copyrighted content is distributed with this project.
 
+Today, the project can boot game data, render areas, run the UI, execute NWScript bytecode, load modules, handle dialogue, and support substantial exploration/combat workflows. It is still a work in progress, however: the browser roadmap and source code both show several major gameplay systems as incomplete, including skill checks, feat resolution in combat, the full Force-power casting pipeline, companion tactical AI, and full start-to-finish story progression.
+
 **Who is this for?**
 
 - Developers interested in contributing to an open game engine
 - KotOR modders who want to run mods in a modern, programmable environment
 - Researchers and enthusiasts studying classic RPG engine design
-- Players who want to play KotOR in a browser or on platforms the original never supported
+- Players who want to follow or contribute to efforts to make KotOR playable in a browser or on platforms the original never supported
 
-**Live Demo:** [![Online Playable Demo](https://img.shields.io/badge/Online_Playable_Demo-37a779?style=for-the-badge&logoColor=white&logo=google-chrome)](https://play.swkotor.net/)
+**Live Demo (experimental):** [![Online Playable Demo](https://img.shields.io/badge/Online_Playable_Demo-37a779?style=for-the-badge&logoColor=white&logo=google-chrome)](https://play.swkotor.net/)
+
+### Current Status
+
+- ✅ Build pipeline works: `npm run webpack:dev` completed successfully during this README refresh
+- ✅ Automated tests are active: `npm test -- --no-cache` currently passes with **12 suites / 1092 tests**
+- 🔶 Core game loop pieces work, including rendering, area/module loading, dialogue, inventory, save/load, and basic combat resolution
+- ❌ The project is **not** yet complete or fully playable end-to-end; see [ROADMAP.md](ROADMAP.md) for subsystem-level implementation status
 
 ---
 
@@ -77,13 +86,18 @@ Written entirely in TypeScript, KotOR.js targets both desktop environments (via 
 - ✅ Effect system (60+ effect types including Force powers, damage shields, time stop)
 - ✅ Saving throw mechanics (Fortitude, Reflex, Will) with D20 auto-success/fail rules
 - ✅ Save / load game (full round-trip with inventory and party state)
-- ✅ Party management, formation, and follower AI
-- ✅ Combat rounds: attack rolls, dual-wield scheduling, critical hit detection
+- 🔶 Party management structure is present, but party formation and companion tactical AI are still incomplete
+- 🔶 Combat rounds handle attack rolls and scheduling, but feat resolution and parts of combat resolution are still incomplete
 - ✅ Dialogue/conversation system with script callbacks
 - ✅ Inventory, store/merchant buy/sell
 - ✅ Galaxy map, journal/quest log, character generation menus
-- ✅ Pazaak minigame (partial)
-- ✅ K2 influence system (`GetInfluence` / `SetInfluence` / `ModifyInfluence`)
+- 🔶 Pazaak minigame is partial
+- 🔶 K2 influence APIs exist, but broader romance / influence system work remains on the roadmap
+- ❌ Skill checks (Persuade, Computer Use, Repair, etc.)
+- ❌ Full Force-power casting pipeline
+- ❌ Companion tactical AI
+- ❌ Full party formation controls
+- ❌ Full start-to-finish story progression
 
 ### Resource Handling
 - ✅ KEY/BIF, RIM, ERF, MOD archive parsing
@@ -94,13 +108,13 @@ Written entirely in TypeScript, KotOR.js targets both desktop environments (via 
 
 ### Applications
 - ✅ **Launcher** — React-based game file selector and profile manager
-- ✅ **Game Client** — Fully playable game running in Electron or the browser
+- 🔶 **Game Client** — substantial gameplay systems are implemented in Electron and browser builds, but the game is not yet complete end-to-end
 - ✅ **KotOR Forge** — Integrated modding suite with 3D viewport and Monaco code editor
 - ✅ **Debugger** — Developer inspection and testing tools
 
 ### Platform Support
 - ✅ Windows / macOS / Linux (via Electron)
-- ✅ Browser (Chrome recommended; requires HTTPS)
+- 🔶 Browser target (Chrome recommended; requires HTTPS and still has roadmap blockers)
 - [Browser Compatibility Table](https://github.com/KobaltBlu/KotOR.js/wiki/Browser-Support)
 
 ---
@@ -369,7 +383,7 @@ Build the project and serve the contents of `dist/` from a web server with a val
 
 > **Note:** Chrome is the recommended browser. HTTP (non-HTTPS) is not supported due to browser security restrictions on the File System Access API.
 
-**Live Demo:** [https://play.swkotor.net/](https://play.swkotor.net/)
+**Live Demo (experimental):** [https://play.swkotor.net/](https://play.swkotor.net/)
 
 ---
 
@@ -383,7 +397,7 @@ KotOR.js uses **Jest** with `ts-jest` for its test suite.
 npm run test
 ```
 
-This runs all 11 test files (165 tests total) and generates a coverage report in `./coverage/`.
+This runs the full Jest test suite and generates a coverage report in `./coverage/`.
 
 ### Run Tests Without Coverage (faster)
 
@@ -406,6 +420,7 @@ npx jest --no-coverage
 | `src/engine/SaveGameInventoryLoad.test.ts` | Save game inventory loading |
 | `src/engine/EngineLocation.test.ts` | Location data structures |
 | `src/utility/GameFileSystem.browser.test.ts` | Browser file system API |
+| `src/utility/ObjectPool.test.ts` | Object pool utility behavior |
 
 ---
 
@@ -456,10 +471,7 @@ Contributions are welcome! Here's how to get started:
 ### Code Style
 
 - TypeScript is enforced via `tsconfig.json` (`noImplicitAny: true`).
-- ESLint is configured via `.eslintrc.yml`. Run the linter before submitting:
-  ```bash
-  npx eslint src/
-  ```
+- ESLint is configured via `.eslintrc.yml`, but the lint setup currently needs migration for the installed ESLint version before `npx eslint src/` will work again.
 - Match the coding style of the file you are editing.
 
 ### Finding Work
