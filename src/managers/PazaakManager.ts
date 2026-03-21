@@ -621,14 +621,17 @@ export class PazaakManager {
       }
       /**
        * If the player has more than 20 points, they will end their turn because they busted.
-       * The AI gets a chance to play a recovery side-deck card before the round ends.
+       * Both the player and AI get a chance to play a recovery side-deck card before the round ends.
+       * - AI: uses AI_DETERMINE_MOVE to auto-select a recovery card.
+       * - Player: the action queue is left empty so the player can optionally play a side card,
+       *   then click End Turn (BTN_XTEXT) which calls AddEndTurnAction → END_TURN → END_ROUND.
        */
       else if(table.points > this.TargetPoints){
         if(tableIndex == PazaakTurnMode.OPPONENT){
           this.AddActionFront(tableIndex, PazaakActionType.AI_DETERMINE_MOVE, [tableIndex]);
-        }else{
-          this.AddActionFront(tableIndex, PazaakActionType.END_ROUND);
         }
+        // For the player, leave the queue empty: the player may play a side card or
+        // press End Turn. The END_TURN handler will detect the bust and call END_ROUND.
       }
       /**
        * If the player has no space left on the table, they will end their turn

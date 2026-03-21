@@ -12,6 +12,7 @@ import { NWScriptInstance } from "./NWScriptInstance";
 import { FeedbackMessageEntry } from "../engine/FeedbackMessageEntry";
 import EngineLocation from "../engine/EngineLocation";
 import { EngineMode } from "../enums/engine/EngineMode";
+import { ActionParameterType } from "../enums/actions/ActionParameterType";
 
 /**
  * NWScriptDefK2 class.
@@ -2058,7 +2059,12 @@ NWScriptDefK2.Actions = {
     name: 'GetHasSkill',
     type: NWScriptDataType.INTEGER,
     args: [ NWScriptDataType.INTEGER, NWScriptDataType.OBJECT ],
-    action: undefined
+    action: function(this: NWScriptInstance, args: [number, ModuleObject]){
+      if(BitWise.InstanceOfObject(args[1], ModuleObjectType.ModuleCreature)){
+        return (args[1] as ModuleCreature).getHasSkill(args[0]) ? NW_TRUE : NW_FALSE;
+      }
+      return NW_FALSE;
+    }
   },
   287: {
     comment: '287: Use nFeat on oTarget.\n- nFeat: FEAT_*\n- oTarget',
@@ -2072,7 +2078,17 @@ NWScriptDefK2.Actions = {
     name: 'ActionUseSkill',
     type: NWScriptDataType.VOID,
     args: [ NWScriptDataType.INTEGER, NWScriptDataType.OBJECT, NWScriptDataType.INTEGER, NWScriptDataType.OBJECT ],
-    action: undefined
+    action: function(this: NWScriptInstance, args: [number, ModuleObject, number, ModuleObject]){
+      if(!BitWise.InstanceOfObject(this.caller, ModuleObjectType.ModuleObject)){
+        return;
+      }
+      const useAction = new GameState.ActionFactory.ActionUseObject();
+      useAction.setParameter(0, ActionParameterType.DWORD, args[1]?.id ?? 0);
+      (useAction as any).skillId = args[0];
+      (useAction as any).subSkillId = args[2];
+      (useAction as any).itemUsed = args[3];
+      this.caller.actionQueue.add(useAction);
+    }
   },
   289: {
     comment: '289: Determine whether oSource sees oTarget.',
@@ -2263,7 +2279,12 @@ NWScriptDefK2.Actions = {
     name: 'GetSkillRank',
     type: NWScriptDataType.INTEGER,
     args: [ NWScriptDataType.INTEGER, NWScriptDataType.OBJECT ],
-    action: undefined
+    action: function(this: NWScriptInstance, args: [number, ModuleObject]){
+      if(BitWise.InstanceOfObject(args[1], ModuleObjectType.ModuleCreature)){
+        return (args[1] as ModuleCreature).getSkillLevel(args[0]);
+      }
+      return 0;
+    }
   },
   316: {
     comment: '316: Get the attack target of oCreature.\nThis only works when oCreature is in combat.',

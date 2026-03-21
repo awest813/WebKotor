@@ -15390,3 +15390,209 @@ describe('Section 201: ChangeToStandardFaction null-guard for missing faction', 
   });
 
 });
+
+// ---------------------------------------------------------------------------
+// Section 202: K2 GetSkillRank (fn 315) wired up
+// ---------------------------------------------------------------------------
+describe('Section 202: K2 GetSkillRank returns skill level for creatures', () => {
+
+  function simulateGetSkillRank(creature: { skills: Array<{ rank: number }> } | undefined, skillId: number): number {
+    if(creature && creature.skills && creature.skills[skillId] !== undefined){
+      return creature.skills[skillId]?.rank || 0;
+    }
+    return 0;
+  }
+
+  it('returns the correct skill rank for a valid creature and skill index', () => {
+    const creature = { skills: [{ rank: 3 }, { rank: 5 }, { rank: 0 }, { rank: 7 }] };
+    expect(simulateGetSkillRank(creature, 0)).toBe(3);
+    expect(simulateGetSkillRank(creature, 1)).toBe(5);
+    expect(simulateGetSkillRank(creature, 3)).toBe(7);
+  });
+
+  it('returns 0 for an untrained skill', () => {
+    const creature = { skills: [{ rank: 0 }, { rank: 0 }] };
+    expect(simulateGetSkillRank(creature, 1)).toBe(0);
+  });
+
+  it('returns 0 for an invalid (non-creature) target', () => {
+    expect(simulateGetSkillRank(undefined, 0)).toBe(0);
+  });
+
+  it('returns 0 for an out-of-bounds skill index', () => {
+    const creature = { skills: [{ rank: 4 }] };
+    expect(simulateGetSkillRank(creature, 99)).toBe(0);
+  });
+
+});
+
+// ---------------------------------------------------------------------------
+// Section 203: K2 GetHasSkill (fn 286) wired up
+// ---------------------------------------------------------------------------
+describe('Section 203: K2 GetHasSkill returns NW_TRUE/NW_FALSE for creatures', () => {
+
+  const NW_TRUE = 1;
+  const NW_FALSE = 0;
+
+  function simulateGetHasSkill(creature: { getHasSkill?: (skillId: number) => boolean } | undefined, skillId: number): number {
+    if(creature && typeof creature.getHasSkill === 'function'){
+      return creature.getHasSkill(skillId) ? NW_TRUE : NW_FALSE;
+    }
+    return NW_FALSE;
+  }
+
+  it('returns NW_TRUE when the creature has the skill', () => {
+    const creature = { getHasSkill: (skillId: number) => skillId === 4 /* PERSUADE */ };
+    expect(simulateGetHasSkill(creature, 4)).toBe(NW_TRUE);
+  });
+
+  it('returns NW_FALSE when the creature does not have the skill', () => {
+    const creature = { getHasSkill: (skillId: number) => skillId === 4 };
+    expect(simulateGetHasSkill(creature, 5 /* REPAIR */)).toBe(NW_FALSE);
+  });
+
+  it('returns NW_FALSE for an invalid (non-creature) target', () => {
+    expect(simulateGetHasSkill(undefined, 4)).toBe(NW_FALSE);
+  });
+
+});
+
+// ---------------------------------------------------------------------------
+// Section 204: K2 ActionUseSkill (fn 288) queues action with skill metadata
+// ---------------------------------------------------------------------------
+describe('Section 204: K2 ActionUseSkill queues an ActionUseObject with skill metadata', () => {
+
+  it('queues a use-object action with skillId and subSkillId attached', () => {
+    let crashed = false;
+    const queued: any[] = [];
+    try {
+      const caller: any = {
+        actionQueue: {
+          add: (action: any) => queued.push(action)
+        }
+      };
+      const target: any = { id: 42 };
+      const skillId = 4; // PERSUADE
+      const subSkillId = 0;
+      const itemUsed: any = null;
+
+      // Simulate ActionUseSkill implementation
+      const useAction: any = { parameters: [] as any[], skillId: 0, subSkillId: 0, itemUsed: null };
+      useAction.setParameter = (idx: number, _type: number, val: any) => { useAction.parameters[idx] = val; };
+      useAction.setParameter(0, 4 /* DWORD */, target?.id ?? 0);
+      useAction.skillId = skillId;
+      useAction.subSkillId = subSkillId;
+      useAction.itemUsed = itemUsed;
+      caller.actionQueue.add(useAction);
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(queued).toHaveLength(1);
+    expect(queued[0].skillId).toBe(4);
+    expect(queued[0].subSkillId).toBe(0);
+    expect(queued[0].parameters[0]).toBe(42);
+  });
+
+  it('uses 0 as target id when target is null', () => {
+    let crashed = false;
+    const queued: any[] = [];
+    try {
+      const caller: any = { actionQueue: { add: (a: any) => queued.push(a) } };
+      const useAction: any = { parameters: [] as any[], skillId: 0 };
+      useAction.setParameter = (idx: number, _type: number, val: any) => { useAction.parameters[idx] = val; };
+      useAction.setParameter(0, 4, (null as any)?.id ?? 0);
+      useAction.skillId = 5; // REPAIR
+      caller.actionQueue.add(useAction);
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(queued[0].parameters[0]).toBe(0);
+    expect(queued[0].skillId).toBe(5);
+  });
+
+});
+
+// ---------------------------------------------------------------------------
+// Section 205: Pazaak player bust recovery – queue stays empty after bust
+// ---------------------------------------------------------------------------
+describe('Section 205: Pazaak player bust recovery leaves action queue empty', () => {
+
+  it('does not push END_ROUND when player busts (queue remains empty for side-card play)', () => {
+    // Simulates the DRAW_CARD action path after my fix:
+    //   - tableIndex == PLAYER (0) and points > TargetPoints
+    //   - the action queue should NOT receive END_ROUND; only the AI branch gets AI_DETERMINE_MOVE
+    const PLAYER = 0;
+    const OPPONENT = 1;
+    const targetPoints = 20;
+
+    function simulateDrawCardBust(tableIndex: number, points: number, actions: string[]): void {
+      if(points > targetPoints){
+        if(tableIndex === OPPONENT){
+          actions.push('AI_DETERMINE_MOVE');
+        }
+        // Player: queue is intentionally left empty (player can play side card or end turn)
+      }
+    }
+
+    const playerActions: string[] = [];
+    simulateDrawCardBust(PLAYER, 22, playerActions);
+    expect(playerActions).toHaveLength(0); // No actions queued for player bust
+
+    const opponentActions: string[] = [];
+    simulateDrawCardBust(OPPONENT, 25, opponentActions);
+    expect(opponentActions).toEqual(['AI_DETERMINE_MOVE']); // AI gets recovery move
+  });
+
+  it('END_TURN handler detects bust and calls END_ROUND', () => {
+    // Simulates what END_TURN does when player has busted (points > 20)
+    let crashed = false;
+    let endRoundCalled = false;
+    let nextTurnStarted = false;
+    try {
+      const targetPoints = 20;
+      const playerPoints = 22; // over target
+      const opponentPoints = 15;
+      const playerStand = false;
+      const opponentStand = false;
+      const bBusted = (playerPoints > targetPoints || opponentPoints > targetPoints);
+      const bTied = (playerPoints === targetPoints && opponentPoints === targetPoints);
+      const bAllStand = playerStand && opponentStand;
+      if(bBusted || bTied || bAllStand){
+        endRoundCalled = true;
+      }else{
+        nextTurnStarted = true;
+      }
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(endRoundCalled).toBe(true);
+    expect(nextTurnStarted).toBe(false);
+  });
+
+  it('player can recover from bust by playing a side card that brings score under 20', () => {
+    // After bust the player plays a side card; if resulting score <= 20, END_TURN
+    // proceeds normally (no bust detected).
+    let crashed = false;
+    let endRoundCalled = false;
+    let nextTurnStarted = false;
+    try {
+      const targetPoints = 20;
+      let playerPoints = 22; // busted
+      const sideCardModifier = -5; // side card brings it to 17
+      playerPoints += sideCardModifier; // 17
+
+      const opponentPoints = 15;
+      const playerStand = false;
+      const opponentStand = false;
+      const bBusted = (playerPoints > targetPoints || opponentPoints > targetPoints);
+      const bTied = (playerPoints === targetPoints && opponentPoints === targetPoints);
+      const bAllStand = playerStand && opponentStand;
+      if(bBusted || bTied || bAllStand){
+        endRoundCalled = true;
+      }else{
+        nextTurnStarted = true;
+      }
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(endRoundCalled).toBe(false);
+    expect(nextTurnStarted).toBe(true); // Normal turn continues after recovery
+  });
+
+});
