@@ -11,6 +11,12 @@ import { OdysseyModel3D } from "../../../three/odyssey";
 import { AudioEngine } from "../../../audio/AudioEngine";
 import { ApplicationProfile } from "../../../utility/ApplicationProfile";
 import { ApplicationEnvironment } from "../../../enums/ApplicationEnvironment";
+import { GameEngineType } from "../../../enums/engine";
+import {
+  isMainMenuDebugWarpEnabled,
+  KOTOR_MAIN_MENU_DEBUG_WARP_OPTIONS,
+  MainMenuDebugWarpOption,
+} from "./mainMenuDebugWarp";
 
 /**
  * MainMenu class.
@@ -40,6 +46,8 @@ export class MainMenu extends GameMenu {
   _3dView: LBL_3DView;
   bgMusicBuffer: ArrayBuffer;
   bgMusicResRef: string = 'mus_theme_cult';
+  debugWarpOption: MainMenuDebugWarpOption = KOTOR_MAIN_MENU_DEBUG_WARP_OPTIONS[0];
+  debugWarpPending = false;
 
   constructor(){
     super();
@@ -60,6 +68,7 @@ export class MainMenu extends GameMenu {
       this.LBL_LUCAS.hide();
       this.LBL_NEWCONTENT.hide();
       this.BTN_WARP.hide();
+      this.initializeDebugWarpControls();
 
       this.BTN_NEWGAME.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -222,6 +231,75 @@ export class MainMenu extends GameMenu {
 
   triggerControllerBPress() {
     this.BTN_EXIT.click();
+  }
+
+  initializeDebugWarpControls() {
+    if (
+      GameState.GameKey !== GameEngineType.KOTOR ||
+      !isMainMenuDebugWarpEnabled(window.location.search, window.location.hostname)
+    ) {
+      return;
+    }
+
+    this.LBL_NEWCONTENT.show();
+    this.LBL_NEWCONTENT.setText('DEBUG WARP');
+    this.LB_MODULES.show();
+    this.BTN_WARP.show();
+    this.BTN_WARP.setText('Warp');
+    this.LB_MODULES.clearItems();
+
+    for (const option of KOTOR_MAIN_MENU_DEBUG_WARP_OPTIONS) {
+      this.LB_MODULES.addItem(option.label, {
+        onClick: () => {
+          this.debugWarpOption = option;
+        },
+      });
+    }
+
+    if (this.LB_MODULES.children.length) {
+      this.LB_MODULES.select(this.LB_MODULES.children[0]);
+      this.debugWarpOption = KOTOR_MAIN_MENU_DEBUG_WARP_OPTIONS[0];
+    }
+
+    this.BTN_WARP.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await this.launchDebugWarp();
+    });
+  }
+
+  async launchDebugWarp() {
+    if (this.debugWarpPending) {
+      return;
+    }
+
+    const option = this.debugWarpOption ?? KOTOR_MAIN_MENU_DEBUG_WARP_OPTIONS[0];
+    if (!option) {
+      return;
+    }
+
+    this.debugWarpPending = true;
+    try {
+      GameState.GlobalVariableManager.Init();
+      GameState.PartyManager.PortraitOrder = [];
+
+      const playerTemplate = GameState.PartyManager.GeneratePlayerTemplate();
+      GameState.PartyManager.PlayerTemplate = playerTemplate;
+      GameState.PartyManager.ActualPlayerTemplate = playerTemplate;
+
+      const portraitId = playerTemplate.RootNode.getFieldByLabel('PortraitId')?.getValue?.() ?? 0;
+      const goodEvil = playerTemplate.RootNode.getFieldByLabel('GoodEvil')?.getValue?.() ?? 50;
+      const portraitResRef = GameState.SWRuleSet.portraits[portraitId]?.getPortraitGoodEvil(goodEvil);
+      if (portraitResRef) {
+        GameState.PartyManager.AddPortraitToOrder(portraitResRef);
+      }
+
+      await CurrentGame.InitGameInProgressFolder(true);
+      await GameState.LoadModule(option.module, option.waypoint ?? null);
+    } catch (error: any) {
+      console.error('MainMenu.launchDebugWarp: failed to warp from the main menu', error);
+    } finally {
+      this.debugWarpPending = false;
+    }
   }
   
 }
