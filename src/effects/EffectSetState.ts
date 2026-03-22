@@ -2,6 +2,7 @@ import { GameEffect } from "./GameEffect";
 import { GameEffectType } from "../enums/effects/GameEffectType";
 import * as THREE from "three";
 import { GameEffectSetStateType } from "../enums/effects/GameEffectSetStateType";
+import { ModuleCreatureAnimState } from "../enums/module/ModuleCreatureAnimState";
 
 /**
  * EffectSetState class.
@@ -34,28 +35,28 @@ export class EffectSetState extends GameEffect {
 
     switch(this.getInt(0)){
       case GameEffectSetStateType.CONFUSED:
-        //todo
+        //confused creatures wander randomly; no looping animation override needed
       break;
       case GameEffectSetStateType.FRIGHTENED:
-        //todo
+        //frightened creatures flee; no looping animation override needed
       break;
       case GameEffectSetStateType.DROID_STUN:
-        //todo
+        this.object.setAnimationState(ModuleCreatureAnimState.PARALYZED);
       break;
       case GameEffectSetStateType.CUT_SCENE_STUNNED:
-        //todo
+        this.object.setAnimationState(ModuleCreatureAnimState.PARALYZED);
       break;
       case GameEffectSetStateType.CUT_SCENE_PARALYZE:
-        //todo
+        this.object.setAnimationState(ModuleCreatureAnimState.PARALYZED);
       break;
       case GameEffectSetStateType.SLEEP:
-        //todo
+        this.object.setAnimationState(ModuleCreatureAnimState.SLEEP);
       break;
       case GameEffectSetStateType.CHOKE:
-        //todo
+        this.object.setAnimationState(ModuleCreatureAnimState.CHOKE);
       break;
       case GameEffectSetStateType.CUT_SCENE_HORRIFIED:
-        //todo
+        this.object.setAnimationState(ModuleCreatureAnimState.HORROR);
       break;
       case GameEffectSetStateType.FORCEPUSH:
         this.updateForcePush(delta);

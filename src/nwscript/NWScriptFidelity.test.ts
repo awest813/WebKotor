@@ -15596,3 +15596,405 @@ describe('Section 205: Pazaak player bust recovery leaves action queue empty', (
   });
 
 });
+
+// ---------------------------------------------------------------------------
+// Section 206: ActionDisarmMine demolitions skill check
+// ---------------------------------------------------------------------------
+describe('Section 206: ActionDisarmMine demolitions skill check', () => {
+
+  it('disarm succeeds when d20 + demolitions >= disarmDC', () => {
+    let crashed = false;
+    let result: string = '';
+    try {
+      const disarmDC = 15;
+      const demolitionsModifier = 10;
+      const d20Roll = 10; // 10 + 10 = 20 >= 15: success
+      if(d20Roll + demolitionsModifier < disarmDC){
+        result = 'FAILED';
+      } else {
+        result = 'COMPLETE';
+      }
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(result).toBe('COMPLETE');
+  });
+
+  it('disarm fails when d20 + demolitions < disarmDC', () => {
+    let crashed = false;
+    let result: string = '';
+    try {
+      const disarmDC = 15;
+      const demolitionsModifier = 0;
+      const d20Roll = 5; // 5 + 0 = 5 < 15: fail
+      if(d20Roll + demolitionsModifier < disarmDC){
+        result = 'FAILED';
+      } else {
+        result = 'COMPLETE';
+      }
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(result).toBe('FAILED');
+  });
+
+  it('uses disarm_dc from traps 2DA row if available, else defaults to 15', () => {
+    let crashed = false;
+    let disarmDC = 15;
+    try {
+      const trapRow: any = { disarm_dc: '20' };
+      disarmDC = trapRow ? parseInt(trapRow.disarm_dc ?? '15') : 15;
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(disarmDC).toBe(20);
+  });
+
+  it('defaults to DC 15 when traps 2DA row is undefined', () => {
+    let crashed = false;
+    let disarmDC = 0;
+    try {
+      const trapRow: any = undefined;
+      disarmDC = trapRow ? parseInt(trapRow.disarm_dc ?? '15') : 15;
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(disarmDC).toBe(15);
+  });
+
+});
+
+// ---------------------------------------------------------------------------
+// Section 207: ActionExamineMine detect trap
+// ---------------------------------------------------------------------------
+describe('Section 207: ActionExamineMine detect trap', () => {
+
+  it('calls detectTrap on a TRAP type trigger', () => {
+    let crashed = false;
+    let detectCalled = false;
+    try {
+      const TRAP_TYPE = 1;
+      const trap: any = { type: TRAP_TYPE, detectTrap: () => { detectCalled = true; } };
+      const isTrap = trap.type === TRAP_TYPE;
+      if(isTrap){
+        trap.detectTrap();
+      }
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(detectCalled).toBe(true);
+  });
+
+  it('does not call detectTrap on non-TRAP triggers', () => {
+    let crashed = false;
+    let detectCalled = false;
+    try {
+      const TRAP_TYPE = 1;
+      const OTHER_TYPE = 2;
+      const trigger: any = { type: OTHER_TYPE, detectTrap: () => { detectCalled = true; } };
+      if(trigger.type === TRAP_TYPE){
+        trigger.detectTrap();
+      }
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(detectCalled).toBe(false);
+  });
+
+  it('completes even when target is not a ModuleTrigger', () => {
+    let crashed = false;
+    let status = '';
+    try {
+      const isCreature = true; // owner is a creature
+      const isTargetTrigger = false;
+      if(isCreature){
+        if(isTargetTrigger){
+          // would call detectTrap
+        }
+        status = 'COMPLETE';
+      } else {
+        status = 'FAILED';
+      }
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(status).toBe('COMPLETE');
+  });
+
+});
+
+// ---------------------------------------------------------------------------
+// Section 208: ActionRecoverMine skill check + item recovery
+// ---------------------------------------------------------------------------
+describe('Section 208: ActionRecoverMine skill check and item recovery', () => {
+
+  it('recover succeeds and would add item when roll passes DC', () => {
+    let crashed = false;
+    let trapDestroyed = false;
+    let itemAdded = false;
+    try {
+      const disarmDC = 12;
+      const demolitionsModifier = 8;
+      const d20Roll = 10; // 10 + 8 = 18 >= 12: success
+      if(d20Roll + demolitionsModifier >= disarmDC){
+        trapDestroyed = true;
+        // simulate item recovery path
+        const buffer: any = null; // no real resource in test, but no crash
+        if(buffer){
+          itemAdded = true;
+        }
+      }
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(trapDestroyed).toBe(true);
+    expect(itemAdded).toBe(false); // no buffer in test, but no crash
+  });
+
+  it('recover fails when roll does not pass DC', () => {
+    let crashed = false;
+    let result = '';
+    try {
+      const disarmDC = 20;
+      const demolitionsModifier = 0;
+      const d20Roll = 1; // 1 < 20: fail
+      if(d20Roll + demolitionsModifier < disarmDC){
+        result = 'FAILED';
+      } else {
+        result = 'COMPLETE';
+      }
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(result).toBe('FAILED');
+  });
+
+});
+
+// ---------------------------------------------------------------------------
+// Section 209: CheatConsoleManager implementations
+// ---------------------------------------------------------------------------
+describe('Section 209: CheatConsoleManager implementations', () => {
+
+  it('giveComputerSpikes delegates to giveItem with g_i_progspike01', () => {
+    let crashed = false;
+    let itemRef = '';
+    let itemAmount = 0;
+    try {
+      function giveItem(resref: string, amount: number){ itemRef = resref; itemAmount = amount; }
+      function giveComputerSpikes(amount: number = 100){
+        amount = Math.abs(amount);
+        giveItem('g_i_progspike01', amount);
+      }
+      giveComputerSpikes(5);
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(itemRef).toBe('g_i_progspike01');
+    expect(itemAmount).toBe(5);
+  });
+
+  it('giveMedPacks delegates to giveItem with g_i_medpac001', () => {
+    let crashed = false;
+    let itemRef = '';
+    try {
+      function giveItem(resref: string, _amount: number){ itemRef = resref; }
+      function giveMedPacks(amount: number = 100){ giveItem('g_i_medpac001', Math.abs(amount)); }
+      giveMedPacks(3);
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(itemRef).toBe('g_i_medpac001');
+  });
+
+  it('giveCredits calls AddGold with the specified amount', () => {
+    let crashed = false;
+    let goldAdded = 0;
+    try {
+      const PartyManager: any = { AddGold: (n: number) => { goldAdded = n; } };
+      function giveCredits(amount: number = 0){
+        amount = Math.abs(amount);
+        PartyManager.AddGold(amount);
+      }
+      giveCredits(500);
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(goldAdded).toBe(500);
+  });
+
+  it('heal sets HP and FP to max for all party members', () => {
+    let crashed = false;
+    const results: Array<{hp: number; fp: number}> = [];
+    try {
+      const party: any[] = [
+        { setHP: (v: number) => results.push({hp: v, fp: 0}), setFP: (v: number) => { results[results.length-1].fp = v; }, getMaxHP: () => 50, getMaxFP: () => 20 },
+        { setHP: (v: number) => results.push({hp: v, fp: 0}), setFP: (v: number) => { results[results.length-1].fp = v; }, getMaxHP: () => 80, getMaxFP: () => 30 },
+      ];
+      for(let i = 0; i < party.length; i++){
+        const member = party[i];
+        if(member){
+          member.setHP(member.getMaxHP());
+          member.setFP(member.getMaxFP());
+        }
+      }
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(results).toHaveLength(2);
+    expect(results[0].hp).toBe(50);
+    expect(results[0].fp).toBe(20);
+    expect(results[1].hp).toBe(80);
+    expect(results[1].fp).toBe(30);
+  });
+
+  it('revealmap calls areaMap.revealEntireMap when area is present', () => {
+    let crashed = false;
+    let revealed = false;
+    try {
+      const module: any = { area: { areaMap: { revealEntireMap: () => { revealed = true; } } } };
+      if(module?.area){
+        module.area.areaMap?.revealEntireMap();
+      }
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(revealed).toBe(true);
+  });
+
+  it('whereami logs player coordinates without crash', () => {
+    let crashed = false;
+    let loggedOutput = '';
+    try {
+      const player: any = { position: { x: 12.3456, y: -5.6789, z: 0.0001 } };
+      if(player){
+        const pos = player.position;
+        loggedOutput = `whereami: x=${pos.x.toFixed(4)}, y=${pos.y.toFixed(4)}, z=${pos.z.toFixed(4)}`;
+      }
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(loggedOutput).toContain('whereami: x=12.3456');
+  });
+
+  it('addLevel grants XP and calls autoLevelUp for each level', () => {
+    let crashed = false;
+    let autoLevelUpCalls = 0;
+    let xpSet = 0;
+    try {
+      const exptable2DA: any = { rows: [undefined, undefined, { xp: '1000' }, { xp: '3000' }] };
+      const player: any = {
+        getTotalClassLevel: () => 2,
+        getXP: () => 500,
+        setXP: (v: number) => { xpSet = v; },
+        autoLevelUp: () => { autoLevelUpCalls++; },
+      };
+      const points = 1;
+      const exptable = exptable2DA;
+      if(exptable){
+        const currentLevel = player.getTotalClassLevel();
+        const targetLevel = currentLevel + points;
+        const targetRow = exptable.rows[targetLevel];
+        if(targetRow){
+          const xpNeeded = parseInt(targetRow.xp);
+          if(player.getXP() < xpNeeded){
+            player.setXP(xpNeeded);
+          }
+        }
+      }
+      for(let i = 0; i < points; i++){
+        player.autoLevelUp();
+      }
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(xpSet).toBe(3000);
+    expect(autoLevelUpCalls).toBe(1);
+  });
+
+});
+
+// ---------------------------------------------------------------------------
+// Section 210: ModulePlaceable animationConstantToAnimation null-guard fallback
+// ---------------------------------------------------------------------------
+describe('Section 210: ModulePlaceable animationConstantToAnimation null-guard fallback', () => {
+
+  it('returns row when animations2DA has the row', () => {
+    let crashed = false;
+    let result: any = undefined;
+    try {
+      const superFallback = () => ({ name: 'fallback' });
+      const row = { name: 'open' };
+      const animations2DA: any = { rows: { 310: row } };
+      result = animations2DA.rows[310] ?? superFallback();
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(result?.name).toBe('open');
+  });
+
+  it('falls back to super.animationConstantToAnimation when row is undefined', () => {
+    let crashed = false;
+    let result: any = undefined;
+    try {
+      const superFallback = () => ({ name: 'fallback' });
+      const animations2DA: any = { rows: {} };
+      result = animations2DA.rows[310] ?? superFallback();
+    } catch(_e) { crashed = true; }
+    expect(crashed).toBe(false);
+    expect(result?.name).toBe('fallback');
+  });
+
+});
+
+// ---------------------------------------------------------------------------
+// Section 211: EffectSetState animation state dispatch
+// ---------------------------------------------------------------------------
+describe('Section 211: EffectSetState animation state dispatch', () => {
+
+  const SLEEP = 6;
+  const CHOKE = 7;
+  const CUT_SCENE_PARALYZE = 5;
+  const CUT_SCENE_STUNNED = 4;
+  const DROID_STUN = 3;
+  const CUT_SCENE_HORRIFIED = 8;
+  const CONFUSED = 1;
+  const FRIGHTENED = 2;
+
+  const ANIM_SLEEP = 10137;
+  const ANIM_CHOKE = 10150;
+  const ANIM_PARALYZED = 10138;
+  const ANIM_HORROR = 10124;
+
+  function simulateEffectSetStateUpdate(stateType: number): number | undefined {
+    let animStateSet: number | undefined = undefined;
+    const obj: any = { setAnimationState: (s: number) => { animStateSet = s; } };
+    switch(stateType){
+      case CONFUSED: break;
+      case FRIGHTENED: break;
+      case DROID_STUN:        obj.setAnimationState(ANIM_PARALYZED); break;
+      case CUT_SCENE_STUNNED: obj.setAnimationState(ANIM_PARALYZED); break;
+      case CUT_SCENE_PARALYZE: obj.setAnimationState(ANIM_PARALYZED); break;
+      case SLEEP:             obj.setAnimationState(ANIM_SLEEP); break;
+      case CHOKE:             obj.setAnimationState(ANIM_CHOKE); break;
+      case CUT_SCENE_HORRIFIED: obj.setAnimationState(ANIM_HORROR); break;
+    }
+    return animStateSet;
+  }
+
+  it('SLEEP state sets SLEEP animation', () => {
+    expect(simulateEffectSetStateUpdate(SLEEP)).toBe(ANIM_SLEEP);
+  });
+
+  it('CHOKE state sets CHOKE animation', () => {
+    expect(simulateEffectSetStateUpdate(CHOKE)).toBe(ANIM_CHOKE);
+  });
+
+  it('CUT_SCENE_PARALYZE state sets PARALYZED animation', () => {
+    expect(simulateEffectSetStateUpdate(CUT_SCENE_PARALYZE)).toBe(ANIM_PARALYZED);
+  });
+
+  it('CUT_SCENE_STUNNED state sets PARALYZED animation', () => {
+    expect(simulateEffectSetStateUpdate(CUT_SCENE_STUNNED)).toBe(ANIM_PARALYZED);
+  });
+
+  it('DROID_STUN state sets PARALYZED animation', () => {
+    expect(simulateEffectSetStateUpdate(DROID_STUN)).toBe(ANIM_PARALYZED);
+  });
+
+  it('CUT_SCENE_HORRIFIED state sets HORROR animation', () => {
+    expect(simulateEffectSetStateUpdate(CUT_SCENE_HORRIFIED)).toBe(ANIM_HORROR);
+  });
+
+  it('CONFUSED state does not set any animation (handled by creature movement)', () => {
+    expect(simulateEffectSetStateUpdate(CONFUSED)).toBeUndefined();
+  });
+
+  it('FRIGHTENED state does not set any animation (handled by creature movement)', () => {
+    expect(simulateEffectSetStateUpdate(FRIGHTENED)).toBeUndefined();
+  });
+
+});

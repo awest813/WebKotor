@@ -42,7 +42,21 @@ export class CheatConsoleManager {
     points = Math.abs(points);
     const player = GameState.getCurrentPlayer();
     if(player){
-      
+      const exptable2DA = GameState.TwoDAManager.datatables.get('exptable');
+      if(exptable2DA){
+        const currentLevel = player.getTotalClassLevel();
+        const targetLevel = currentLevel + points;
+        const targetRow = exptable2DA.rows[targetLevel];
+        if(targetRow){
+          const xpNeeded = parseInt(targetRow.xp);
+          if(player.getXP() < xpNeeded){
+            player.setXP(xpNeeded);
+          }
+        }
+      }
+      for(let i = 0; i < points; i++){
+        player.autoLevelUp();
+      }
     }
   }
 
